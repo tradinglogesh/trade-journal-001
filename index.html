@@ -1956,6 +1956,38 @@ function renderHome(el) {
     : active.slice(0, 5).map(j => renderJC(j)).join('');
   const chip = (icon, label, fn) => `<button class="btn bs btn-sm" onclick="${fn}" style="gap:6px;font-weight:700;">${icon} ${label}</button>`;
 
+  // Right-column widgets: last 14 days, streak, top pairs, certificates
+  const wbox = (title, inner) => `<div class="card" style="padding:16px;margin:16px 0 0;"><div class="sl" style="margin-bottom:10px;">${title}</div>${inner}</div>`;
+  let side = '';
+  if (total) {
+    const days = [];
+    for (let k = 13; k >= 0; k--) { const d = new Date(); d.setDate(d.getDate() - k); days.push(localDate(d)); }
+    const dayPnl = days.map(d => entries.filter(x => x.date === d).reduce((a, x) => a + x.pnl, 0));
+    const mx = Math.max(...dayPnl.map(Math.abs), 1);
+    const bars = `<div style="display:flex;align-items:center;gap:3px;height:60px;">${dayPnl.map((v, k) =>
+      `<div title="${days[k]}: ${fm(v)}" style="flex:1;height:${Math.max(Math.abs(v) / mx * 100, v ? 8 : 3)}%;background:${v > 0 ? '#22c55e' : v < 0 ? '#ef4444' : 'var(--border)'};border-radius:3px;"></div>`).join('')}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Last 14 days: <b style="color:${col(dayPnl.reduce((a, b) => a + b, 0))}">${fm(dayPnl.reduce((a, b) => a + b, 0))}</b></div>`;
+    let streak = 0, sType = '';
+    for (const x of chrono.slice().reverse()) {
+      const t = x.res === 'win' ? 'W' : x.res === 'loss' ? 'L' : '';
+      if (!t || (sType && t !== sType)) break;
+      sType = t; streak++;
+    }
+    const pairMap = {};
+    entries.forEach(x => { const p = x.e.pair || '—'; pairMap[p] = (pairMap[p] || 0) + x.pnl; });
+    const pairs = Object.entries(pairMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    side += wbox('📈 Last 14 days', bars);
+    side += wbox('🔥 Current streak', streak
+      ? `<div style="font-size:22px;font-weight:800;color:${sType === 'W' ? 'var(--win)' : 'var(--loss)'};">${streak} ${sType === 'W' ? 'Win' : 'Loss'}${streak > 1 ? (sType === 'W' ? 's' : 'es') : ''} in a row</div>`
+      : `<div style="color:var(--muted);font-size:13px;">No active streak</div>`);
+    side += wbox('💱 Top pairs', pairs.map(([p, v]) =>
+      `<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:4px 0;"><span>${esc(p)}</span><span style="color:${col(v)};font-family:var(--font-mono);">${fm(v)}</span></div>`).join(''));
+  }
+  const certCount = allJournals.reduce((a, j) => a + (j.certs || []).length, 0);
+  side += `<div class="card" onclick="switchTab('certificates')" style="padding:16px;margin:16px 0 0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+    <div><div class="sl">🏅 Certificates</div><div style="font-size:13px;color:var(--muted);margin-top:4px;">${certCount ? certCount + ' uploaded' : 'Upload your first certificate'}</div></div>
+    <span style="color:var(--accent);font-weight:800;">→</span></div>`;
+
   el.innerHTML = `
   <div style="padding:16px;" class="dashboard-grid">
     <div class="hm-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
@@ -2017,6 +2049,7 @@ function renderHome(el) {
         ${chip('🔍', 'Filter', 'openFilterScreen()')}
         ${chip('📘', 'Plans', 'openTradingPlans()')}
       </div>
+      ${side}
     </div>
   </div>`;
 }
