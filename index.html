@@ -2822,16 +2822,42 @@ function deleteCurrentEntry() {
 }
 
 // JOURNALS & TRADING PLANS
+let journalFilter = 'all';
+const J_FILTERS = [
+  ['all', 'All', j => true],
+  ['phase1', 'Phase 1', j => (j.stage || 'phase1') === 'phase1'],
+  ['phase2', 'Phase 2', j => j.stage === 'phase2'],
+  ['master', 'Master', j => j.stage === 'master'],
+  ['passed', '✔ Passed', j => jStats(j).state === 'passed' || j.archiveReason === 'Passed'],
+  ['breached', '⚠ Breached', j => jStats(j).state === 'breached' || j.archiveReason === 'Breached'],
+  ['archived', '📦 Archived', j => !!j.archived]
+];
+
+function setJournalFilter(f) {
+  journalFilter = f;
+  renderJournals(g('tabContent'));
+}
+
 function renderJournals(el) {
-  const active = allJournals.filter(j => !j.archived);
-  const archived = allJournals.filter(j => j.archived);
+  const def = J_FILTERS.find(f => f[0] === journalFilter) || J_FILTERS[0];
+  const chips = J_FILTERS.map(f => `<button class="ftab ${f[0] === journalFilter ? 'active' : ''}" style="flex:none;white-space:nowrap;" onclick="setJournalFilter('${f[0]}')">${f[1]} (${allJournals.filter(f[2]).length})</button>`).join('');
+  let list;
+  if (journalFilter === 'all') {
+    const active = allJournals.filter(j => !j.archived);
+    const archived = allJournals.filter(j => j.archived);
+    list = active.map(j => renderJC(j)).join('') +
+      (archived.length ? `<div class="sh" style="margin-top:20px;"><span class="st">📦 Archived (${archived.length})</span></div>${archived.map(j => renderJC(j)).join('')}` : '');
+  } else {
+    const items = allJournals.filter(def[2]);
+    list = items.length ? items.map(j => renderJC(j)).join('') : `<div class="es"><div class="ei">🔍</div><h3>No journals match this filter</h3></div>`;
+  }
   el.innerHTML = `<div style="padding:16px;">
     <div class="sh">
       <span class="st">Trading Journals</span>
       <button class="btn bp btn-sm" onclick="openNewJournal()">+ New Journal</button>
     </div>
-    ${active.map(j => renderJC(j)).join('')}
-    ${archived.length ? `<div class="sh" style="margin-top:20px;"><span class="st">📦 Archived (${archived.length})</span></div>${archived.map(j => renderJC(j)).join('')}` : ''}
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;">${chips}</div>
+    ${list}
   </div>`;
 }
 
