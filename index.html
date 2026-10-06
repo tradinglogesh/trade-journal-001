@@ -833,18 +833,15 @@ html, body {
     grid-template-columns: 1fr 380px;
     grid-template-areas:
       "header header"
-      "stats  actions"
-      "chart  journals"
-      "recent journals";
+      "hero   accounts"
+      "recent accounts";
     gap: 8px 32px;
     align-items: start;
   }
   .hm-header { grid-area: header; }
-  .hm-stats { grid-area: stats; }
-  .hm-chart { grid-area: chart; }
-  .hm-actions { grid-area: actions; }
+  .hm-hero { grid-area: hero; }
+  .hm-accounts { grid-area: accounts; }
   .hm-recent { grid-area: recent; }
-  .hm-journals { grid-area: journals; }
 }
 </style>
 </head>
@@ -1708,7 +1705,134 @@ function onHomeJournalChange(jid) {
 // ============================================================
 // HOME TAB
 // ============================================================
+function sparkline(vals, color) {
+  if (vals.length < 2) return `<div style="color:var(--muted);font-size:12px;text-align:center;padding:26px 0;">Log more trades to see your equity curve</div>`;
+  const W = 600, H = 110, P = 6;
+  const mn = Math.min(...vals), mx = Math.max(...vals), span = mx - mn || 1;
+  const pts = vals.map((v, i) => [P + i / (vals.length - 1) * (W - 2 * P), H - P - (v - mn) / span * (H - 2 * P)]);
+  const line = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:110px;display:block;">
+    <polygon points="${P},${H - P} ${line} ${pts[pts.length - 1][0].toFixed(1)},${H - P}" fill="${color}22"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+
 function renderHome(el) {
+  if (homeJournalId && !allJournals.some(j => j.id === homeJournalId)) homeJournalId = '';
+  const activeJournalObj = allJournals.find(j => j.id === homeJournalId) || null;
+  const entries = (homeJournalId ? allEntries.filter(e => e.journal_id === homeJournalId) : allEntries.slice())
+    .map((e, i) => ({ e, i, pnl: parseFloat(e.pnl) || 0, res: (e.result || '').toLowerCase(), date: e.entry_date || '' }));
+  const chrono = entries.slice().sort((a, b) => a.date.localeCompare(b.date) || b.i - a.i);
+  const recent = entries.slice().sort((a, b) => b.date.localeCompare(a.date) || a.i - b.i).slice(0, 5).map(x => x.e);
+
+  const total = entries.length;
+  const wins = entries.filter(x => x.res === 'win').length;
+  const losses = entries.filter(x => x.res === 'loss').length;
+  const be = total - wins - losses;
+  const totalPnl = entries.reduce((a, x) => a + x.pnl, 0);
+  const gw = entries.filter(x => x.pnl > 0).reduce((a, x) => a + x.pnl, 0);
+  const gl = Math.abs(entries.filter(x => x.pnl < 0).reduce((a, x) => a + x.pnl, 0));
+  const pf = gl > 0 ? (gw / gl).toFixed(2) : (gw > 0 ? '∞' : '—');
+  const winRate = total ? Math.round(wins / total * 100) : 0;
+  const today = localDate();
+  const todayPnl = entries.filter(x => x.date === today).reduce((a, x) => a + x.pnl, 0);
+  const monthPnl = entries.filter(x => x.date.slice(0, 7) === today.slice(0, 7)).reduce((a, x) => a + x.pnl, 0);
+  const wdScope = homeJournalId ? [activeJournalObj] : allJournals;
+  const withdrawn = wdScope.reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0);
+  let run = 0;
+  const curve = [0].concat(chrono.map(x => (run += x.pnl)));
+
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const fm = v => (v < 0 ? '-$' : '+$') + Math.abs(v).toFixed(2);
+  const col = v => v > 0 ? 'var(--win)' : v < 0 ? 'var(--loss)' : 'var(--muted)';
+  const mini = (l, v, c) => `<div style="flex:1;min-width:90px;"><div class="sl">${l}</div><div style="font-size:19px;font-weight:800;font-family:var(--font-mono);margin-top:3px;${c ? 'color:' + c : ''}">${v}</div></div>`;
+
+  let challenge = '';
+  if (activeJournalObj && !activeJournalObj.archived) {
+    const s = jStats(activeJournalObj), j = activeJournalObj;
+    const bar = (label, pct, limit, danger) => {
+      const w = Math.min(Math.max(pct / limit * 100, 0), 100);
+      return `<div style="margin-top:10px;"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px;"><span>${label}</span><span style="color:var(--muted);">${pct.toFixed(2)}% / ${limit}%</span></div>
+        <div class="pb" style="height:8px;"><div class="pf" style="width:${w}%;background:${danger ? (w > 80 ? 'var(--loss)' : w > 50 ? 'var(--be)' : 'var(--win)') : (s.passed ? '#22c55e' : 'var(--accent)')};"></div></div></div>`;
+    };
+    if (s.bal > 0) challenge = `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;"><span>🎯 ${STAGE_LABEL[s.stage]} · Equity $${s.equity.toFixed(2)}</span><span style="color:${s.state === 'breached' ? 'var(--loss)' : s.state === 'passed' ? '#16a34a' : 'var(--muted)'};">${s.state === 'breached' ? 'BREACHED' : s.state === 'passed' ? 'TARGET REACHED' : 'ACTIVE'}</span></div>
+      ${s.stage !== 'master' && j.targetPct ? bar('Profit target', Math.max(s.profitPct, 0), j.targetPct, false) : ''}
+      ${j.dailyLossPct ? bar('Daily loss', s.dayPct, j.dailyLossPct, true) : ''}
+      ${j.maxLossPct ? bar('Max drawdown', s.ddPct, j.maxLossPct, true) : ''}</div>`;
+  }
+
+  const active = allJournals.filter(j => !j.archived);
+  const accounts = active.length === 0
+    ? `<div class="card" style="padding:22px;text-align:center;color:var(--muted);"><div style="font-size:30px;">📘</div><div style="font-weight:700;margin:6px 0 12px;">Create your first journal</div><button class="btn bp btn-sm" onclick="openNewJournal()">+ New Journal</button></div>`
+    : active.slice(0, 5).map(j => renderJC(j)).join('');
+  const chip = (icon, label, fn) => `<button class="btn bs btn-sm" onclick="${fn}" style="gap:6px;font-weight:700;">${icon} ${label}</button>`;
+
+  el.innerHTML = `
+  <div style="padding:16px;" class="dashboard-grid">
+    <div class="hm-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+      <div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Hey ${esc(userProfile.name.split(' ')[0])} 👋</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;">${isDark ? '☀️' : '🌙'}</button>
+        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive">☁️ Sync</button>
+        <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:190px;font-weight:700;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
+          <option value="" ${!homeJournalId ? 'selected' : ''}>📊 All Journals</option>
+          ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === homeJournalId ? 'selected' : ''}>${j.archived ? '📦 ' : ''}${esc(j.name)}</option>`).join('')}
+        </select>
+        <button class="btn bp btn-sm" onclick="openAddEntry()" style="padding:10px 18px;">＋ New Trade</button>
+      </div>
+    </div>
+
+    <div class="hm-hero">
+      <div class="card" style="padding:22px;margin:0 0 16px;">
+        <div class="sl">${activeJournalObj ? esc(activeJournalObj.name) : 'All journals'} · Net P&amp;L</div>
+        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:4px 0 2px;">
+          <div style="font-size:36px;font-weight:800;font-family:var(--font-mono);color:${col(totalPnl)};">${fm(totalPnl)}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);">Today <span style="color:${col(todayPnl)}">${fm(todayPnl)}</span> · This month <span style="color:${col(monthPnl)}">${fm(monthPnl)}</span></div>
+        </div>
+        <div style="margin:10px 0 16px;">${sparkline(curve, totalPnl >= 0 ? '#22c55e' : '#ef4444')}</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+          ${mini('Win rate', winRate + '%', total ? (winRate >= 50 ? 'var(--win)' : 'var(--loss)') : '')}
+          ${mini('Profit factor', pf)}
+          ${mini('Trades', total)}
+          ${mini('💸 Withdrawn', '$' + withdrawn.toFixed(2), '#f59e0b')}
+        </div>
+        ${total ? `<div style="display:flex;height:8px;border-radius:99px;overflow:hidden;margin-top:16px;background:var(--surface2);">
+          <div style="width:${wins / total * 100}%;background:#22c55e;"></div><div style="width:${losses / total * 100}%;background:#ef4444;"></div><div style="width:${be / total * 100}%;background:#f59e0b;"></div></div>
+          <div style="display:flex;gap:16px;font-size:11px;font-weight:700;margin-top:6px;"><span style="color:var(--win);">${wins} Wins</span><span style="color:var(--loss);">${losses} Losses</span><span style="color:var(--be);">${be} BE</span></div>` : ''}
+        ${challenge}
+      </div>
+    </div>
+
+    <div class="hm-recent">
+      <div class="sh">
+        <span class="st">Recent Trades</span>
+        <button onclick="switchTab('journals')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">View All</button>
+      </div>
+      ${recent.length === 0
+        ? `<div class="es"><div class="ei">📝</div><h3>No trades yet</h3><p>Tap ＋ New Trade to log your first one.</p></div>`
+        : recent.map(e => renderEC(e, true)).join('')}
+    </div>
+
+    <div class="hm-accounts">
+      <div class="sh" style="margin-top:0;">
+        <span class="st">My Accounts (${active.length})</span>
+        <button onclick="switchTab('journals')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">Manage</button>
+      </div>
+      ${accounts}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
+        ${chip('📊', 'Analysis', "switchTab('analysis')")}
+        ${chip('📅', 'Calendar', "switchTab('calendar')")}
+        ${chip('🔍', 'Filter', 'openFilterScreen()')}
+        ${chip('📘', 'Plans', 'openTradingPlans()')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function _renderHomeLegacy(el) {
   let entries = allEntries;
   let activeJournalObj = null;
   if (homeJournalId) {
@@ -2020,12 +2144,15 @@ function exportFilteredExcel() {
 // ANALYSIS TAB
 // ============================================================
 function renderAnalysis(el) {
-  const selJid = window._analysisJournalId || '';
+  const selJid = allJournals.some(j => j.id === window._analysisJournalId) ? window._analysisJournalId : '';
+  const range = window._analysisRange || 0;
+  const cutoff = range ? localDate(new Date(Date.now() - range * 864e5)) : '';
   const jr = allJournals.find(j => j.id === selJid);
   const entries = allEntries
     .filter(e => !selJid || e.journal_id === selJid)
     .map((e, i) => ({ e, i, pnl: parseFloat(e.pnl) || 0, res: (e.result || '').toLowerCase(), date: e.entry_date || '' }))
-    .sort((a, b) => a.date.localeCompare(b.date) || a.i - b.i);
+    .filter(x => !cutoff || x.date >= cutoff)
+    .sort((a, b) => a.date.localeCompare(b.date) || b.i - a.i);
 
   const total = entries.length;
   const wins = entries.filter(x => x.res === 'win');
@@ -2074,7 +2201,7 @@ function renderAnalysis(el) {
   };
 
   let challenge = '';
-  if (jr && bal > 0 && (jr.targetPct || jr.dailyLossPct || jr.maxLossPct)) {
+  if (jr && !range && bal > 0 && (jr.targetPct || jr.dailyLossPct || jr.maxLossPct)) {
     challenge = `<div class="card" style="margin-bottom:20px;padding:24px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <div class="fl" style="margin:0;">🎯 ACCOUNT / CHALLENGE PROGRESS</div>
@@ -2137,6 +2264,25 @@ function renderAnalysis(el) {
   const circ = 276, wf = total ? wins.length / total : 0, lf = total ? losses.length / total : 0, bf = total ? be / total : 0;
   const card = (title, body) => `<div class="card" style="margin:0;padding:22px;"><div class="fl" style="margin-bottom:14px;">${title}</div>${body}</div>`;
 
+  const dayVals = days.map(d => byDay[d]);
+  const bestDay = dayVals.length ? Math.max(...dayVals) : 0;
+  const worstDayAll = dayVals.length ? Math.min(...dayVals) : 0;
+  const consistency = net > 0 && bestDay > 0 ? (bestDay / net * 100).toFixed(0) + '%' : '—';
+  const perDay = days.length ? (total / days.length).toFixed(1) : '—';
+  const wdAll = (selJid ? [jr] : allJournals).reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0);
+  const monthly = {};
+  entries.forEach(x => { const k = x.date.slice(0, 7); if (!k) return; const o = monthly[k] || (monthly[k] = { k, n: 0, w: 0, l: 0, pnl: 0 }); o.n++; o.pnl += x.pnl; if (x.res === 'win') o.w++; if (x.res === 'loss') o.l++; });
+  const monthlyRows = Object.values(monthly).sort((a, b) => b.k.localeCompare(a.k));
+  const monthlyHtml = monthlyRows.length === 0 ? '<div style="color:var(--muted);text-align:center;padding:16px;">No data</div>' : monthlyRows.map(o => {
+    const wr = o.n ? Math.round(o.w / o.n * 100) : 0;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-weight:800;min-width:80px;">${o.k}</div>
+      <div style="flex:1;font-size:12px;color:var(--muted);font-weight:600;">${o.n} trades · ${wr}% · ${o.w}W ${o.l}L</div>
+      <div style="min-width:90px;text-align:right;font-weight:800;font-family:var(--font-mono);color:${cls(o.pnl)};">${fm(o.pnl)}</div></div>`;
+  }).join('');
+  const rangeChips = [[0, 'All time'], [7, '7D'], [30, '30D'], [90, '90D']].map(r =>
+    `<button class="ftab ${r[0] === range ? 'active' : ''}" style="flex:none;" onclick="onAnalysisRange(${r[0]})">${r[1]}</button>`).join('');
+
   el.innerHTML = `
   <div style="padding:16px;">
     <div class="fg" style="margin-bottom:20px;">
@@ -2146,6 +2292,7 @@ function renderAnalysis(el) {
         ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === selJid ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
       </select>
       ${jr ? `<button class="btn bs btn-sm" style="margin-top:10px;" onclick="openEditJournal('${esc(jr.id)}')">✏️ Edit journal &amp; challenge rules</button>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;overflow-x:auto;">${rangeChips}</div>
     </div>
 
     ${challenge}
@@ -2165,6 +2312,11 @@ function renderAnalysis(el) {
       ${kpi('TRADING DAYS', days.length)}
       ${kpi('WIN STREAK', maxW)}
       ${kpi('LOSS STREAK', maxL)}
+      ${kpi('BEST DAY', fm(bestDay), 'var(--win)')}
+      ${kpi('WORST DAY', fm(worstDayAll), 'var(--loss)')}
+      ${kpi('CONSISTENCY (best day / profit)', consistency)}
+      ${kpi('TRADES / DAY', perDay)}
+      ${wdAll > 0 ? kpi('💸 WITHDRAWN', '$' + wdAll.toFixed(2), '#f59e0b') : ''}
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
@@ -2187,6 +2339,7 @@ function renderAnalysis(el) {
           </div>
         </div>`)}
       ${card('📅 P&L BY WEEKDAY', dowHtml)}
+      ${card('🗓️ MONTHLY PERFORMANCE', monthlyHtml)}
       ${card('💱 PAIR PERFORMANCE', table(group(x => x.e.pair)))}
       ${card('🕒 SESSION PERFORMANCE', table(group(x => x.e.session)))}
       ${card('↕️ BUY vs SELL', table(group(x => x.e.direction)))}
@@ -2296,6 +2449,11 @@ function _renderAnalysisLegacy(el) {
       `}
     </div>
   </div>`;
+}
+
+function onAnalysisRange(d) {
+  window._analysisRange = d;
+  renderAnalysis(g('tabContent'));
 }
 
 function onAnalysisJournalChange(jid) {
