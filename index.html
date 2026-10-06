@@ -2168,8 +2168,9 @@ function renderAnalysis(el) {
   const expectancy = total ? net / total : 0;
   const rrs = entries.map(x => parseFloat(x.e.rr_ratio)).filter(v => v > 0);
   const avgRR = rrs.length ? (rrs.reduce((a, v) => a + v, 0) / rrs.length).toFixed(2) : '—';
-  const best = total ? Math.max(...entries.map(x => x.pnl)) : 0;
-  const worst = total ? Math.min(...entries.map(x => x.pnl)) : 0;
+  const posT = entries.map(x => x.pnl).filter(v => v > 0), negT = entries.map(x => x.pnl).filter(v => v < 0);
+  const best = posT.length ? Math.max(...posT) : null;
+  const worst = negT.length ? Math.min(...negT) : null;
 
   const byDay = {};
   entries.forEach(x => { byDay[x.date] = (byDay[x.date] || 0) + x.pnl; });
@@ -2265,9 +2266,11 @@ function renderAnalysis(el) {
   const card = (title, body) => `<div class="card" style="margin:0;padding:22px;"><div class="fl" style="margin-bottom:14px;">${title}</div>${body}</div>`;
 
   const dayVals = days.map(d => byDay[d]);
-  const bestDay = dayVals.length ? Math.max(...dayVals) : 0;
-  const worstDayAll = dayVals.length ? Math.min(...dayVals) : 0;
+  const posD = dayVals.filter(v => v > 0), negD = dayVals.filter(v => v < 0);
+  const bestDay = posD.length ? Math.max(...posD) : null;
+  const worstDayAll = negD.length ? Math.min(...negD) : null;
   const consistency = net > 0 && bestDay > 0 ? (bestDay / net * 100).toFixed(0) + '%' : '—';
+  const fmN = (v, c) => v === null ? '<span style="color:var(--muted)">None</span>' : fm(v);
   const perDay = days.length ? (total / days.length).toFixed(1) : '—';
   const wdAll = (selJid ? [jr] : allJournals).reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0);
   const monthly = {};
@@ -2306,14 +2309,14 @@ function renderAnalysis(el) {
       ${kpi('AVG LOSS', avgLoss > 0 ? '-$' + avgLoss.toFixed(2) : '$0.00', avgLoss > 0 ? 'var(--loss)' : 'var(--muted)')}
       ${kpi('AVG RR', avgRR)}
       ${kpi('TOTAL TRADES', total)}
-      ${kpi('BEST TRADE', fm(best), 'var(--win)')}
-      ${kpi('WORST TRADE', fm(worst), worst < 0 ? 'var(--loss)' : 'var(--win)')}
+      ${kpi('BEST WINNING TRADE', fmN(best), 'var(--win)')}
+      ${kpi('WORST LOSING TRADE', fmN(worst), 'var(--loss)')}
       ${kpi('MAX DRAWDOWN', (maxDD > 0 ? '-$' : '$') + maxDD.toFixed(2) + (bal && maxDD > 0 ? ` (${(maxDD / bal * 100).toFixed(1)}%)` : ''), maxDD > 0 ? 'var(--loss)' : 'var(--muted)')}
       ${kpi('TRADING DAYS', days.length)}
       ${kpi('WIN STREAK', maxW)}
       ${kpi('LOSS STREAK', maxL)}
-      ${kpi('BEST DAY', fm(bestDay), 'var(--win)')}
-      ${kpi('WORST DAY', fm(worstDayAll), worstDayAll < 0 ? 'var(--loss)' : 'var(--win)')}
+      ${kpi('BEST DAY', fmN(bestDay), 'var(--win)')}
+      ${kpi('WORST LOSING DAY', fmN(worstDayAll), 'var(--loss)')}
       ${kpi('CONSISTENCY (best day / profit)', consistency)}
       ${kpi('TRADES / DAY', perDay)}
       ${wdAll > 0 ? kpi('💸 WITHDRAWN', '$' + wdAll.toFixed(2), '#f59e0b') : ''}
