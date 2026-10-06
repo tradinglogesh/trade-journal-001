@@ -1,0 +1,2764 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Trade Journal"/>
+<meta name="theme-color" content="#f3f6fc" id="themeColorMeta"/>
+<title>Trade Journal - Professional Trading Suite</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- SheetJS (local copy) & Google Identity Services -->
+<script src="lib/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+:root {
+  --bg: #f4f7fc;
+  --surface: #ffffff;
+  --surface2: #f8faff;
+  --surface3: #eef2ff;
+  --border: #e2e8f0;
+  --border-focus: #6366f1;
+  --text: #0f172a;
+  --muted: #64748b;
+  --muted2: #94a3b8;
+  --accent: #4f46e5;
+  --accent2: #6366f1;
+  --accent3: #818cf8;
+  --accent-light: #eef2ff;
+  --win: #16a34a;
+  --win-bg: rgba(22, 163, 74, 0.1);
+  --win-border: rgba(22, 163, 74, 0.25);
+  --loss: #dc2626;
+  --loss-bg: rgba(220, 38, 38, 0.1);
+  --loss-border: rgba(220, 38, 38, 0.25);
+  --be: #d97706;
+  --be-bg: rgba(217, 119, 6, 0.1);
+  --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --r: 16px;
+  --rs: 10px;
+  --rl: 22px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0f1e;
+  --surface: #111827;
+  --surface2: #1a2236;
+  --surface3: #222f45;
+  --border: #1e293b;
+  --border-focus: #818cf8;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --muted2: #94a3b8;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --accent3: #a5b4fc;
+  --accent-light: rgba(99, 102, 241, 0.15);
+  --win: #22c55e;
+  --win-bg: rgba(34, 197, 94, 0.12);
+  --win-border: rgba(34, 197, 94, 0.3);
+  --loss: #ef4444;
+  --loss-bg: rgba(239, 68, 68, 0.12);
+  --loss-border: rgba(239, 68, 68, 0.3);
+  --be: #f59e0b;
+  --be-bg: rgba(245, 158, 11, 0.12);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  transition: background 0.2s, color 0.2s;
+}
+
+/* SCREENS */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .3s;
+  overflow: hidden;
+  z-index: 10;
+}
+.screen.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.screen.slide-back {
+  transform: translateX(-25%);
+  opacity: 0;
+  pointer-events: none;
+}
+.page-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.page-body::-webkit-scrollbar { display: none; }
+
+/* TOPBAR */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  min-height: 60px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.back-btn, .icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted2);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.back-btn { color: var(--text); font-weight: 700; }
+.icon-btn:hover, .back-btn:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--accent2);
+}
+.icon-btn:active, .back-btn:active { transform: scale(0.95); }
+
+/* BOTTOM NAV (MOBILE) */
+.bottom-nav {
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  flex-shrink: 0;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 6px 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color .2s;
+}
+.nav-item .ni { font-size: 20px; transition: transform .2s; }
+.nav-item.active { color: var(--accent); }
+.nav-item.active .ni { transform: scale(1.15); }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+/* FORMS */
+.fg { margin-bottom: 16px; }
+.fl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .6px;
+  margin-bottom: 8px;
+  display: block;
+  text-transform: uppercase;
+}
+.fi, .fs, .ft {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border .15s, box-shadow .15s;
+  font-family: var(--font);
+}
+.fi:focus, .fs:focus, .ft:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.ft { resize: vertical; min-height: 80px; }
+.fs option { background: var(--surface); color: var(--text); }
+
+/* BUTTONS */
+.btn {
+  padding: 12px 20px;
+  border-radius: var(--rs);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font);
+}
+.btn:active { transform: scale(.98); }
+.bp { background: var(--accent); color: #fff; }
+.bp:hover { background: #4338ca; }
+.bs { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+.bs:hover { background: var(--surface3); }
+.bd { background: var(--loss-bg); color: var(--loss); border: 1px solid var(--loss-border); }
+.bw { width: 100%; }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+/* BADGES */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.bwin { background: var(--win-bg); color: var(--win); border: 1px solid var(--win-border); }
+.bloss { background: var(--loss-bg); color: var(--loss); border: 1px solid var(--loss-border); }
+.bbe { background: var(--be-bg); color: var(--be); }
+.bbuy { background: rgba(99, 102, 241, 0.12); color: var(--accent); font-weight: 700; }
+.bsell { background: rgba(239, 68, 68, 0.12); color: var(--loss); font-weight: 700; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, rgba(99,102,241,.05), transparent);
+  pointer-events: none;
+}
+.sv { font-size: 28px; font-weight: 800; margin-bottom: 4px; font-family: var(--font-mono); }
+.sl { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+
+/* PROGRESS */
+.pb { background: var(--surface2); border-radius: 10px; height: 8px; overflow: hidden; }
+.pf { height: 100%; border-radius: 10px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.pw { background: #22c55e; }
+.pl { background: #ef4444; }
+.pa { background: var(--accent); }
+
+/* ENTRY CARD */
+.ec {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: var(--shadow-sm);
+}
+.ec:hover {
+  border-color: var(--accent2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99,102,241,.08);
+}
+.ec:active { transform: scale(.99); }
+.eh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.em { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.em span {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.epnl { font-size: 18px; font-weight: 800; font-family: var(--font-mono); }
+.epnl.pos { color: var(--win); }
+.epnl.neg { color: var(--loss); }
+
+/* JOURNAL CARD */
+.jc {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: var(--shadow-sm);
+}
+.jc:hover {
+  border-color: var(--accent2);
+  transform: translateY(-2px);
+}
+.jdot {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.jinfo { flex: 1; min-width: 0; }
+.jname { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jcount { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* MODALS */
+.mo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(5px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+  padding: 20px;
+}
+.mo.open { opacity: 1; pointer-events: all; }
+.ms {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px rgba(0,0,0,.18);
+  transform: scale(0.95);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+.mo.open .ms { transform: scale(1); }
+.mhd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.mt { font-size: 18px; font-weight: 800; }
+.mb { padding: 20px 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.ma { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); }
+
+/* CALENDAR (FUNDING PIPS STYLE) */
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.cal-nav-title { font-size: 18px; font-weight: 800; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 16px;
+}
+.cdl {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 2px 8px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.cd {
+  min-height: 82px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all .15s;
+  user-select: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.cd:hover { border-color: var(--accent2); }
+.cd-daynum { font-size: 14px; font-weight: 700; color: var(--text); }
+.cd-bottom { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.cd-count { font-size: 11px; font-weight: 700; color: var(--muted); }
+.cd-pnl { font-size: 13px; font-weight: 800; font-family: var(--font-mono); }
+.cd.has-win { background: var(--win-bg); border-color: var(--win-border); }
+.cd.has-loss { background: var(--loss-bg); border-color: var(--loss-border); }
+.cd.has-mixed { background: var(--be-bg); border-color: rgba(245,158,11,.3); }
+.cd.today { border: 2px solid var(--accent); background: var(--accent-light); }
+.cd.today .cd-daynum { color: var(--accent); }
+.cd.selected { background: var(--accent) !important; border-color: var(--accent) !important; }
+.cd.selected .cd-daynum, .cd.selected .cd-count, .cd.selected .cd-pnl { color: #fff !important; }
+.cd.other-month { opacity: .25; background: transparent; border-color: transparent; cursor: default; }
+
+.cal-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.cal-summary-bar b { color: var(--text); font-weight: 700; }
+.cal-week-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  margin: -2px 0 6px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.cal-week-bar b { color: var(--text); font-weight: 700; }
+
+/* CALENDAR PILLS */
+.cal-pills {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px 8px;
+}
+.cal-pill {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all .15s;
+}
+.cal-pill.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* FILTER TABS */
+.ftabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.ftabs::-webkit-scrollbar { display: none; }
+.ftab {
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.ftab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* CHART BARS */
+.chart-bar-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 140px;
+  padding: 20px 10px 30px;
+}
+.chart-bar {
+  flex: 1;
+  border-radius: 6px 6px 0 0;
+  transition: height .8s cubic-bezier(.4,0,.2,1);
+  min-width: 32px;
+  position: relative;
+  cursor: pointer;
+}
+.chart-bar:hover { opacity: .85; }
+.chart-bar .bar-label {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 700;
+}
+.chart-bar .bar-val {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* DONUT */
+.donut-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.donut-wrap svg { transform: rotate(-90deg); }
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 5-IMAGE UPLOADER SLOTS */
+.image-slot-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+.image-slot {
+  border: 1px dashed var(--border);
+  border-radius: var(--rs);
+  padding: 12px;
+  background: var(--surface2);
+  transition: border-color .15s;
+}
+.image-slot:hover { border-color: var(--accent2); }
+.image-slot-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.image-slot-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.image-slot-preview {
+  margin-top: 8px;
+  max-height: 140px;
+  border-radius: 8px;
+  object-fit: cover;
+  width: 100%;
+  display: none;
+  border: 1px solid var(--border);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  transition: all .25s;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.sync-chip { position: fixed; top: 10px; right: 12px; z-index: 9998; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--card, #1e293b); color: var(--text, #fff); border: 1px solid var(--border, #334155); display: none; cursor: default; }
+.sync-chip.show { display: block; }
+.sync-chip.sync-ok { color: #22c55e; }
+.sync-chip.sync-warn { color: #f59e0b; cursor: pointer; }
+
+/* SECTION HEADER */
+.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.st { font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: .6px; text-transform: uppercase; }
+
+/* EMPTY STATE */
+.es { text-align: center; padding: 48px 20px; color: var(--muted); }
+.ei { font-size: 48px; margin-bottom: 14px; }
+
+/* COLOR PICKER */
+.color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.color-circle.sel { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+
+.div { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* AUTH SCREEN */
+#authScreen {
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.12), var(--bg) 70%);
+}
+.auth-box {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+.auth-logo-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.3);
+}
+.google-btn {
+  width: 100%;
+  padding: 13px 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all .15s;
+  font-family: var(--font);
+}
+.google-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent2);
+}
+
+/* DESKTOP SIDEBAR */
+.sidebar { display: none; }
+@media(min-width: 1024px) {
+  html, body { overflow: auto; }
+  body { background: var(--bg); }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 18px;
+    z-index: 100;
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 22px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-brand-name { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+  .sidebar-brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sidebar-nav { display: flex; flex-direction: column; gap: 4px; margin-top: 18px; }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
+    font-family: var(--font);
+  }
+  .sidebar-item .si { font-size: 18px; width: 22px; text-align: center; }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active { background: var(--accent-light); color: var(--accent); }
+  .sidebar-footer { margin-top: auto; padding: 16px 8px 0; border-top: 1px solid var(--border); }
+  .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 10px 4px; }
+  .sidebar-user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .sidebar-user-name { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-user-sub { font-size: 11px; color: var(--muted); }
+
+  .screen {
+    position: fixed;
+    inset: 0; left: 260px;
+    border-radius: 0; border: none; box-shadow: none;
+    width: auto; height: auto; max-height: none;
+  }
+  #authScreen { left: 0 !important; }
+  .bottom-nav { display: none; }
+
+  #tabContent > div, #filterBody, #jEntriesBody, #entryDetailBody, #plansBody {
+    width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 40px !important;
+  }
+  .topbar { padding-left: 40px; padding-right: 40px; }
+  .ftabs { padding-left: 40px; padding-right: 40px; }
+
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .cal-grid { gap: 10px; padding: 20px 0 6px; }
+  .cd { min-height: 105px; border-radius: 14px; padding: 12px; }
+  .cd-daynum { font-size: 16px; }
+  .cd-count { font-size: 12px; }
+  .cd-pnl { font-size: 15px; }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-areas:
+      "header header"
+      "stats  actions"
+      "chart  journals"
+      "recent journals";
+    gap: 8px 32px;
+    align-items: start;
+  }
+  .hm-header { grid-area: header; }
+  .hm-stats { grid-area: stats; }
+  .hm-chart { grid-area: chart; }
+  .hm-actions { grid-area: actions; }
+  .hm-recent { grid-area: recent; }
+  .hm-journals { grid-area: journals; }
+}
+</style>
+</head>
+
+<body data-theme="light">
+
+<!-- AUTH / LOGIN SCREEN -->
+<div class="screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo-badge">📈</div>
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px;">Trade Journal</h1>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px;">Professional Trading Suite Pro Portal</p>
+
+    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Sign in with Google. Your trades load from and auto-save to your own Google Drive, so your latest data follows you on every device.</p>
+
+    <!-- GOOGLE LOGIN BUTTON -->
+    <button class="google-btn" onclick="handleGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+  </div>
+</div>
+
+<!-- DESKTOP SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div style="width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;">📈</div>
+    <div>
+      <div class="sidebar-brand-name">Trade Journal</div>
+      <div class="sidebar-brand-sub">Professional Trading Suite</div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="sidebar-item active" id="side-home" onclick="switchTab('home')"><span class="si">🏠</span>Home</button>
+    <button class="sidebar-item" id="side-journals" onclick="switchTab('journals')"><span class="si">📚</span>Journals</button>
+    <button class="sidebar-item" id="side-analysis" onclick="switchTab('analysis')"><span class="si">📊</span>Analysis</button>
+    <button class="sidebar-item" id="side-calendar" onclick="switchTab('calendar')"><span class="si">📅</span>Calendar</button>
+    <button class="sidebar-item" id="side-settings" onclick="switchTab('settings')"><span class="si">⚙️</span>Settings</button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar" id="sideAvatar">👤</div>
+      <div style="min-width:0;">
+        <div class="sidebar-user-name" id="sideUserName">Trader</div>
+        <div class="sidebar-user-sub" id="sideUserSub">Trader · Local</div>
+      </div>
+    </div>
+    <button class="sidebar-item" onclick="handleLogout()" style="margin-top:6px;color:var(--loss);"><span class="si">🚪</span>Logout</button>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div class="screen hidden" id="mainScreen">
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="page-body" id="tabContent" style="flex:1;"></div>
+    <div class="bottom-nav">
+      <button class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="ni">🏠</span>Home</button>
+      <button class="nav-item" id="nav-journals" onclick="switchTab('journals')"><span class="ni">📚</span>Journals</button>
+      <button class="nav-item" id="nav-analysis" onclick="switchTab('analysis')"><span class="ni">📊</span>Analysis</button>
+      <button class="nav-item" id="nav-calendar" onclick="switchTab('calendar')"><span class="ni">📅</span>Calendar</button>
+      <button class="nav-item" id="nav-settings" onclick="switchTab('settings')"><span class="ni">⚙️</span>Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOURNAL DETAIL SCREEN -->
+<div class="screen hidden" id="journalScreen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title" id="jScreenTitle">Journal</div>
+    <button class="icon-btn" onclick="exportJournalExcel()" title="Export Excel">📊</button>
+    <button class="icon-btn" onclick="openAddEntry()" title="New Entry">＋</button>
+  </div>
+  <div class="ftabs" id="jFilterTabs">
+    <button class="ftab active" onclick="filterE('all')">All</button>
+    <button class="ftab" onclick="filterE('win')">✅ Win</button>
+    <button class="ftab" onclick="filterE('loss')">❌ Loss</button>
+    <button class="ftab" onclick="filterE('buy')">📈 Buy</button>
+    <button class="ftab" onclick="filterE('sell')">📉 Sell</button>
+  </div>
+  <div class="page-body" id="jEntriesBody" style="padding:16px;"></div>
+</div>
+
+<!-- ENTRY DETAIL SCREEN -->
+<div class="screen hidden" id="entryScreen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">Entry Detail</div>
+    <button class="icon-btn" onclick="openEditEntry()" title="Edit">✏️</button>
+    <button class="icon-btn" onclick="deleteCurrentEntry()" title="Delete">🗑️</button>
+  </div>
+  <div class="page-body" id="entryDetailBody" style="padding:16px;"></div>
+</div>
+
+<!-- FILTER & EXPORT SCREEN -->
+<div class="screen hidden" id="filterScreen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">Filter & Export Trades</div>
+    <button class="btn bp btn-sm" onclick="exportFilteredExcel()">📥 Export Excel</button>
+  </div>
+  <div class="page-body" id="filterBody" style="padding:16px;"></div>
+</div>
+
+<!-- TRADING PLANS LIST -->
+<div class="screen hidden" id="plansScreen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">Trading Plans</div>
+    <button class="icon-btn" onclick="openCreatePlan()" title="New Plan">➕</button>
+  </div>
+  <div class="page-body" id="plansBody" style="padding:16px;"></div>
+</div>
+
+<!-- MODALS -->
+
+<!-- ADD / EDIT ENTRY MODAL (5 IMAGES SUPPORTED) -->
+<div class="mo" id="entryModal">
+  <div class="ms">
+    <div class="mhd">
+      <div class="mt" id="entryModalTitle">New Trade Entry</div>
+      <button class="icon-btn" onclick="closeModal('entryModal')">✕</button>
+    </div>
+    <div class="mb" id="entryModalBody">
+      <div class="fg">
+        <label class="fl">Select Journal / Account</label>
+        <select class="fs" id="entryJournalId"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label class="fl">Pair / Instrument</label>
+          <input class="fi" id="entryPair" placeholder="e.g. EURUSD, XAUUSD..."/>
+        </div>
+        <div class="fg">
+          <label class="fl">Direction</label>
+          <select class="fs" id="entryDirection">
+            <option value="Buy">Buy (Long)</option>
+            <option value="Sell">Sell (Short)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label class="fl">Result</label>
+          <select class="fs" id="entryResult">
+            <option value="Win">Win</option>
+            <option value="Loss">Loss</option>
+            <option value="Breakeven">Breakeven</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Net P&L ($)</label>
+          <input class="fi" id="entryPnl" type="number" step="any" placeholder="e.g. 550 or -63"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label class="fl">Timeframe</label>
+          <select class="fs" id="entryTimeframe">
+            <option value="M1">M1</option>
+            <option value="M5">M5</option>
+            <option value="M15" selected>M15</option>
+            <option value="H1">H1</option>
+            <option value="H4">H4</option>
+            <option value="Daily">Daily</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Session</label>
+          <select class="fs" id="entrySession">
+            <option value="London">London</option>
+            <option value="New York" selected>New York</option>
+            <option value="Asian">Asian</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg">
+          <label class="fl">Entry Date</label>
+          <input class="fi" id="entryDate" type="date"/>
+        </div>
+        <div class="fg">
+          <label class="fl">R:R Ratio</label>
+          <input class="fi" id="entryRr" type="number" step="any" placeholder="e.g. 2.0"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Psychology / Emotion</label>
+        <select class="fs" id="entryEmotion">
+          <option value="Disciplined & Calm">Disciplined & Calm</option>
+          <option value="Confident">Confident</option>
+          <option value="Anxious">Anxious / Hesitant</option>
+          <option value="FOMO">FOMO / Impulsive</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Setup & Notes</label>
+        <textarea class="ft" id="entryNotes" placeholder="What was your confluence, entry trigger, and exit reason?"></textarea>
+      </div>
+
+      <!-- 5 CHART IMAGES SECTION -->
+      <div class="fg" style="margin-top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label class="fl" style="margin:0;">📸 Chart Screenshots & Images (Up to 5 Allowed)</label>
+          <span style="font-size:11px;color:var(--muted);font-weight:600;">URL or file upload</span>
+        </div>
+        
+        <div class="image-slot-grid" id="imageSlotsContainer">
+          <div class="image-slot" data-slot="0">
+            <div class="image-slot-hdr">
+              <span class="image-slot-label">Chart 1 (Higher Timeframe / Bias)</span>
+              <button type="button" class="btn bs btn-sm" onclick="clearSlot(0)">Clear</button>
+            </div>
+            <input class="fi img-url-input" placeholder="Paste image URL here..." style="margin-bottom:6px;" oninput="onUrlInput(0, this.value)"/>
+            <input type="file" accept="image/*" class="fi" onchange="onFileInput(0, event)" style="padding:6px;"/>
+            <img class="image-slot-preview" id="preview-0"/>
+          </div>
+
+          <div class="image-slot" data-slot="1">
+            <div class="image-slot-hdr">
+              <span class="image-slot-label">Chart 2 (Entry Execution / M15/M5)</span>
+              <button type="button" class="btn bs btn-sm" onclick="clearSlot(1)">Clear</button>
+            </div>
+            <input class="fi img-url-input" placeholder="Paste image URL here..." style="margin-bottom:6px;" oninput="onUrlInput(1, this.value)"/>
+            <input type="file" accept="image/*" class="fi" onchange="onFileInput(1, event)" style="padding:6px;"/>
+            <img class="image-slot-preview" id="preview-1"/>
+          </div>
+
+          <div class="image-slot" data-slot="2">
+            <div class="image-slot-hdr">
+              <span class="image-slot-label">Chart 3 (Outcome / Target Hit)</span>
+              <button type="button" class="btn bs btn-sm" onclick="clearSlot(2)">Clear</button>
+            </div>
+            <input class="fi img-url-input" placeholder="Paste image URL here..." style="margin-bottom:6px;" oninput="onUrlInput(2, this.value)"/>
+            <input type="file" accept="image/*" class="fi" onchange="onFileInput(2, event)" style="padding:6px;"/>
+            <img class="image-slot-preview" id="preview-2"/>
+          </div>
+
+          <div class="image-slot" data-slot="3">
+            <div class="image-slot-hdr">
+              <span class="image-slot-label">Chart 4 (Additional Confluence)</span>
+              <button type="button" class="btn bs btn-sm" onclick="clearSlot(3)">Clear</button>
+            </div>
+            <input class="fi img-url-input" placeholder="Paste image URL here..." style="margin-bottom:6px;" oninput="onUrlInput(3, this.value)"/>
+            <input type="file" accept="image/*" class="fi" onchange="onFileInput(3, event)" style="padding:6px;"/>
+            <img class="image-slot-preview" id="preview-3"/>
+          </div>
+
+          <div class="image-slot" data-slot="4">
+            <div class="image-slot-hdr">
+              <span class="image-slot-label">Chart 5 (Notes / Review Screenshot)</span>
+              <button type="button" class="btn bs btn-sm" onclick="clearSlot(4)">Clear</button>
+            </div>
+            <input class="fi img-url-input" placeholder="Paste image URL here..." style="margin-bottom:6px;" oninput="onUrlInput(4, this.value)"/>
+            <input type="file" accept="image/*" class="fi" onchange="onFileInput(4, event)" style="padding:6px;"/>
+            <img class="image-slot-preview" id="preview-4"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ma">
+      <button class="btn bs" onclick="closeModal('entryModal')">Cancel</button>
+      <button class="btn bp" style="flex:2" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD JOURNAL MODAL -->
+<div class="mo" id="addJournalModal">
+  <div class="ms">
+    <div class="mhd">
+      <div class="mt">Create New Journal</div>
+      <button class="icon-btn" onclick="closeModal('addJournalModal')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <label class="fl">Journal Name</label>
+        <input class="fi" id="newJName" placeholder="e.g. 5000-Phase -2-oct, Scalping Strategy..."/>
+      </div>
+      <div class="fg">
+        <label class="fl">Description</label>
+        <input class="fi" id="newJDesc" placeholder="Brief rules or purpose..."/>
+      </div>
+      <div class="fg">
+        <label class="fl">Color Theme</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;" id="colorPicker">
+          <div class="color-circle sel" data-c="#6366f1" style="background:#6366f1;" onclick="pickColor('#6366f1',this)"></div>
+          <div class="color-circle" data-c="#ec4899" style="background:#ec4899;" onclick="pickColor('#ec4899',this)"></div>
+          <div class="color-circle" data-c="#22c55e" style="background:#22c55e;" onclick="pickColor('#22c55e',this)"></div>
+          <div class="color-circle" data-c="#f59e0b" style="background:#f59e0b;" onclick="pickColor('#f59e0b',this)"></div>
+          <div class="color-circle" data-c="#38bdf8" style="background:#38bdf8;" onclick="pickColor('#38bdf8',this)"></div>
+          <div class="color-circle" data-c="#ef4444" style="background:#ef4444;" onclick="pickColor('#ef4444',this)"></div>
+          <div class="color-circle" data-c="#8b5cf6" style="background:#8b5cf6;" onclick="pickColor('#8b5cf6',this)"></div>
+          <div class="color-circle" data-c="#14b8a6" style="background:#14b8a6;" onclick="pickColor('#14b8a6',this)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ma">
+      <button class="btn bs" onclick="closeModal('addJournalModal')">Cancel</button>
+      <button class="btn bp" style="flex:2" onclick="createJournal()">Create Journal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sync-chip" id="syncChip" onclick="syncChipClick()"></div>
+
+<script>
+// ============================================================
+// STATE & LOCAL STORAGE PERSISTENCE
+// ============================================================
+const STORAGE_KEY = 'Trade_journal_data_v3';
+const USER_KEY = 'Trade_user_profile_v3';
+const AUTH_TOKEN_KEY = 'Trade_auth_token_v3';
+
+let userProfile = {
+  name: 'Trader',
+  handle: '@trader',
+  email: '',
+  isLoggedIn: false,
+  driveConnected: false,
+  driveFolderId: null
+};
+
+let allJournals = [];
+let dataUpdatedAt = 0;
+let dataOwner = '';
+let lastDataSnap = '';
+let allEntries = [];
+let allTradingPlans = [];
+let currentJournal = null;
+let currentTab = 'home';
+let currentScreenId = 'mainScreen';
+let navHistory = [];
+let activeFilter = 'all';
+let selectedColor = '#6366f1';
+let editingEntryId = null;
+let homeJournalId = '';
+
+// Array of up to 5 images for current entry dialog
+let currentSlotImages = ['', '', '', '', ''];
+
+let calDate = new Date();
+let selectedCalPeriod = 'all';
+
+const DEFAULT_JOURNALS = [
+  { id: 'j-1', name: 'My First Journal', description: 'Default trading journal', color: '#6366f1' }
+];
+
+const DEFAULT_ENTRIES = [];
+
+const DEFAULT_PLANS = [
+  { id: 'p-1', name: 'Institutional Price Action Setup', description: '1. Identify Daily Key Levels\n2. Wait for Session Open Liquidity Hunt\n3. 5M/1M Market Structure Shift with FVG\n4. Strict 1:2 Minimum Risk to Reward' },
+  { id: 'p-2', name: 'Risk Management Rule', description: 'Max 2 trades per day. If -2R is reached, close all charts.' }
+];
+
+function initData() {
+  const userRaw = localStorage.getItem(USER_KEY);
+  if (userRaw) {
+    try { userProfile = { ...userProfile, ...JSON.parse(userRaw) }; } catch (e) {}
+  }
+  userProfile.driveConnected = false;
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      allJournals = parsed.journals || [...DEFAULT_JOURNALS];
+      allEntries = parsed.entries || [...DEFAULT_ENTRIES];
+      allTradingPlans = parsed.plans || [...DEFAULT_PLANS];
+      dataUpdatedAt = Number(parsed.updatedAt) || 0;
+      dataOwner = parsed.owner || userProfile.email || '';
+      lastDataSnap = JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans });
+      syncUserProfileChrome();
+      return;
+    } catch (e) {}
+  }
+
+  allJournals = [...DEFAULT_JOURNALS];
+  allEntries = [...DEFAULT_ENTRIES];
+  allTradingPlans = [...DEFAULT_PLANS];
+  saveToStorage(true);
+  syncUserProfileChrome();
+}
+
+function saveToStorage(skipSync) {
+  try {
+    const snap = JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans });
+    const changed = snap !== lastDataSnap;
+    if (changed && !skipSync) dataUpdatedAt = Date.now();
+    lastDataSnap = snap;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      journals: allJournals,
+      entries: allEntries,
+      plans: allTradingPlans,
+      updatedAt: dataUpdatedAt,
+      owner: dataOwner
+    }));
+    localStorage.setItem(USER_KEY, JSON.stringify(userProfile));
+    if (changed && !skipSync) scheduleSync();
+    return true;
+  } catch (e) {
+    toast('⚠️ Storage full! Remove some chart images or download a backup.');
+    return false;
+  }
+}
+
+function syncUserProfileChrome() {
+  const nameEl = g('sideUserName');
+  if (nameEl) nameEl.textContent = userProfile.name;
+  const subEl = g('sideUserSub');
+  if (subEl) subEl.textContent = `${userProfile.isGoogleUser ? 'Google User' : 'Trader'} · ${userProfile.driveConnected ? 'Drive Connected' : 'Local'}`;
+}
+
+function g(id) { return document.getElementById(id); }
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+function safeUrl(u) {
+  return /^(https?:\/\/|data:image\/)/i.test(String(u || '').trim()) ? String(u).trim() : '';
+}
+function localDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function resBadge(r) {
+  const x = (r || '').toLowerCase();
+  return x === 'win' ? 'bwin' : x === 'loss' ? 'bloss' : 'bbe';
+}
+function formatRR(v) {
+  if (v === undefined || v === null || isNaN(v)) return '—';
+  return `1:${parseFloat(v).toFixed(1)}`;
+}
+function jEmoji(color) { return '📘'; }
+
+// Validates restored data so ids/colors can't break out of HTML attributes
+function sanitizeBackup(d) {
+  if (!d || !Array.isArray(d.journals) || !Array.isArray(d.entries)) throw new Error('Invalid backup file');
+  const okId = v => /^[\w-]+$/.test(String(v));
+  const journals = d.journals.filter(j => j && okId(j.id)).map(j => ({
+    ...j, color: /^#[0-9a-f]{3,8}$/i.test(j.color) ? j.color : '#6366f1'
+  }));
+  const entries = d.entries.filter(e => e && okId(e.id));
+  const plans = Array.isArray(d.plans) ? d.plans.filter(p => p && okId(p.id)) : null;
+  return { journals, entries, plans };
+}
+
+function toast(msg) {
+  const t = g('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// AUTH & LOGIN LOGIC
+// Set your Google OAuth "Web application" client ID here (authorize your GitHub Pages origin in Google Cloud Console).
+const GOOGLE_CLIENT_ID = '735262327898-n236erdrp7ctikulvtpuc7h9l7mslnj4.apps.googleusercontent.com';
+const CRED_KEY = 'Trade_cred_v3';
+const DRIVE_FILE_NAME = 'trade-journal-backup.json';
+let driveToken = null;
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function enterApp() {
+  userProfile.isLoggedIn = true;
+  saveToStorage();
+  syncUserProfileChrome();
+  g('authScreen').classList.add('hidden');
+  g('mainScreen').classList.remove('hidden');
+  currentScreenId = 'mainScreen';
+  switchTab('home');
+}
+
+let driveTokenExpiry = 0;
+let syncTimer = null;
+let syncBusy = false;
+let syncPending = false;
+let syncState = 'idle'; // idle | syncing | synced | offline | reconnect | error
+let lastSyncedAt = 0;
+
+function requestDriveToken(silent) {
+  return new Promise((resolve, reject) => {
+    if (!GOOGLE_CLIENT_ID) return reject(new Error('Google Client ID is not configured in index.html'));
+    if (!(window.google && google.accounts && google.accounts.oauth2)) return reject(new Error('Google library not loaded'));
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+      hint: userProfile.email || undefined,
+      callback: res => {
+        if (res.error) return reject(new Error(res.error));
+        driveToken = res.access_token;
+        driveTokenExpiry = Date.now() + (Number(res.expires_in) || 3600) * 1000 - 60000;
+        resolve(res.access_token);
+      },
+      error_callback: err => reject(new Error(err.type || 'Sign-in cancelled'))
+    });
+    client.requestAccessToken(silent ? { prompt: '' } : {});
+  });
+}
+
+function setSyncState(s) {
+  syncState = s;
+  userProfile.driveConnected = !!driveToken && Date.now() < driveTokenExpiry;
+  const chip = g('syncChip');
+  if (!chip) return;
+  const map = {
+    idle: ['', ''], syncing: ['🔄 Syncing…', 'sync-busy'], synced: ['☁️ Synced', 'sync-ok'],
+    offline: ['📴 Offline – will sync', 'sync-warn'], reconnect: ['🔑 Tap to reconnect Google', 'sync-warn'],
+    error: ['⚠️ Sync failed – tap to retry', 'sync-warn']
+  };
+  const [txt, cls] = map[s] || map.idle;
+  chip.textContent = txt;
+  chip.className = 'sync-chip ' + cls + (txt && userProfile.isLoggedIn ? ' show' : '');
+  syncUserProfileChrome();
+  if (currentTab === 'settings' && g('tabContent') && currentScreenId === 'mainScreen') renderSettings(g('tabContent'));
+}
+
+function syncChipClick() {
+  if (syncState === 'reconnect' || syncState === 'error') reconnectAndSync(false);
+}
+
+// Gets a valid token; silently refreshes if expired. Returns false if user interaction is needed.
+async function getValidToken(allowPrompt) {
+  if (driveToken && Date.now() < driveTokenExpiry) return true;
+  try {
+    await requestDriveToken(!allowPrompt);
+    return true;
+  } catch (e) {
+    driveToken = null;
+    return false;
+  }
+}
+
+async function reconnectAndSync(silent) {
+  if (!(await getValidToken(!silent))) { setSyncState('reconnect'); return false; }
+  return await mergeWithDrive();
+}
+
+function remoteFileUrl(id) { return `https://www.googleapis.com/drive/v3/files/${id}?alt=media`; }
+
+async function driveUpload(id) {
+  const payload = { journals: allJournals, entries: allEntries, plans: allTradingPlans, updatedAt: dataUpdatedAt, owner: userProfile.email };
+  const boundary = 'tj_' + Date.now();
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(payload)}\r\n` +
+    `--${boundary}--`;
+  const url = id
+    ? `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=multipart`
+    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+  const r = await fetch(url, {
+    method: id ? 'PATCH' : 'POST',
+    headers: { Authorization: 'Bearer ' + driveToken, 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body
+  });
+  if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
+  if (!r.ok) throw new Error(`Upload failed (${r.status})`);
+}
+
+// Compares Drive vs local by timestamp; newest wins. Never overwrites newer data with older.
+async function mergeWithDrive() {
+  if (syncBusy) { syncPending = true; return false; }
+  syncBusy = true;
+  setSyncState('syncing');
+  try {
+    const id = await driveFindFile();
+    let remote = null;
+    if (id) {
+      const r = await fetch(remoteFileUrl(id), { headers: { Authorization: 'Bearer ' + driveToken } });
+      if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
+      if (!r.ok) throw new Error(`Download failed (${r.status})`);
+      const raw = await r.json();
+      remote = { ...sanitizeBackup(raw), updatedAt: Number(raw.updatedAt) || 0 };
+    }
+    if (remote && remote.updatedAt > dataUpdatedAt) {
+      allJournals = remote.journals;
+      allEntries = remote.entries;
+      allTradingPlans = remote.plans || allTradingPlans;
+      dataUpdatedAt = remote.updatedAt;
+      saveToStorage(true);
+      if (!allJournals.find(j => j.id === homeJournalId)) homeJournalId = '';
+      if (currentScreenId === 'mainScreen') switchTab(currentTab);
+    } else if (!remote || remote.updatedAt < dataUpdatedAt) {
+      await driveUpload(id);
+    }
+    lastSyncedAt = Date.now();
+    setSyncState('synced');
+    return true;
+  } catch (e) {
+    if (e.auth) setSyncState('reconnect');
+    else setSyncState(navigator.onLine ? 'error' : 'offline');
+    return false;
+  } finally {
+    syncBusy = false;
+    if (syncPending) { syncPending = false; scheduleSync(); }
+  }
+}
+
+function scheduleSync() {
+  if (!userProfile.isLoggedIn || !userProfile.isGoogleUser) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    if (!navigator.onLine) return setSyncState('offline');
+    if (!(await getValidToken(false))) return setSyncState('reconnect');
+    await mergeWithDrive();
+  }, 2000);
+}
+
+async function handleGoogleLogin() {
+  try {
+    await requestDriveToken(false);
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + driveToken } });
+    if (!r.ok) throw new Error('Could not read Google profile');
+    const info = await r.json();
+    const email = (info.email || '').toLowerCase();
+    if (!email) throw new Error('No email returned by Google');
+    // Local data owned by a different account must never mix with this account
+    if (dataOwner && dataOwner !== email) {
+      allJournals = [...DEFAULT_JOURNALS]; allEntries = []; allTradingPlans = [...DEFAULT_PLANS];
+      dataUpdatedAt = 0; homeJournalId = '';
+      lastDataSnap = ''; saveToStorage(true);
+    }
+    dataOwner = email;
+    userProfile.name = info.name || email;
+    userProfile.email = email;
+    userProfile.handle = '@' + email.split('@')[0];
+    userProfile.isGoogleUser = true;
+    userProfile.driveConnected = true;
+    enterApp();
+    await mergeWithDrive();
+    toast(`👋 Welcome, ${userProfile.name}`);
+  } catch (e) {
+    driveToken = null;
+    toast('⚠️ Google sign-in failed: ' + e.message);
+  }
+}
+
+async function handleLogout() {
+  if (userProfile.isGoogleUser && driveToken && Date.now() < driveTokenExpiry) {
+    clearTimeout(syncTimer);
+    syncPending = false;
+    await mergeWithDrive();
+  }
+  userProfile.isLoggedIn = false;
+  userProfile.driveConnected = false;
+  driveToken = null;
+  driveTokenExpiry = 0;
+  saveToStorage(true);
+  setSyncState('idle');
+  showScreen('authScreen');
+  toast('Signed out');
+}
+
+// Resume session after page reload: try silent token refresh, otherwise ask for reconnect
+async function resumeSession() {
+  if (!userProfile.isLoggedIn || !userProfile.isGoogleUser) return;
+  setSyncState('reconnect');
+  const ok = await getValidToken(false);
+  if (ok) await mergeWithDrive();
+  else setSyncState('reconnect');
+}
+window.addEventListener('online', () => { if (userProfile.isLoggedIn && userProfile.isGoogleUser) scheduleSync(); });
+window.addEventListener('offline', () => { if (userProfile.isLoggedIn) setSyncState('offline'); });
+window.addEventListener('load', () => setTimeout(resumeSession, 800));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && userProfile.isLoggedIn && userProfile.isGoogleUser) scheduleSync(); });
+
+// GOOGLE DRIVE SYNC LOGIC
+async function driveFindFile() {
+  const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers: { Authorization: 'Bearer ' + driveToken } });
+  if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
+  if (!r.ok) throw new Error(`Drive lookup failed (${r.status})`);
+  return (await r.json()).files?.[0]?.id || null;
+}
+
+async function ensureDriveToken() {
+  if (!(await getValidToken(true))) throw new Error('Google connection needed');
+  userProfile.driveConnected = true;
+  syncUserProfileChrome();
+}
+
+async function syncWithGoogleDrive() {
+  const ok = await reconnectAndSync(false);
+  toast(ok ? '✅ Synced with Google Drive' : '⚠️ Drive sync failed');
+}
+
+async function restoreFromGoogleDrive() {
+  try {
+    await ensureDriveToken();
+    const id = await driveFindFile();
+    if (!id) return toast('⚠️ No backup found on Drive');
+    if (!confirm('Replace local data with the Drive copy?')) return;
+    const r = await fetch(remoteFileUrl(id), { headers: { Authorization: 'Bearer ' + driveToken } });
+    if (!r.ok) throw new Error(`Download failed (${r.status})`);
+    const raw = await r.json();
+    const d = sanitizeBackup(raw);
+    allJournals = d.journals;
+    allEntries = d.entries;
+    allTradingPlans = d.plans || allTradingPlans;
+    dataUpdatedAt = Number(raw.updatedAt) || Date.now();
+    saveToStorage(true);
+    toast('✅ Restored from Google Drive');
+  } catch (e) {
+    toast('⚠️ Restore failed: ' + e.message);
+  }
+  switchTab(currentTab);
+}
+
+async function syncWithGoogleDrive() {
+  try {
+    await ensureDriveToken();
+    toast('🔄 Syncing trades with Google Drive...');
+    const id = await driveFindFile();
+    const boundary = 'tj_' + Date.now();
+    const body =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })}\r\n` +
+      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans })}\r\n` +
+      `--${boundary}--`;
+    const url = id
+      ? `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    const r = await fetch(url, {
+      method: id ? 'PATCH' : 'POST',
+      headers: { Authorization: 'Bearer ' + driveToken, 'Content-Type': `multipart/related; boundary=${boundary}` },
+      body
+    });
+    if (r.status === 401) { driveToken = null; throw new Error('Session expired, try again'); }
+    if (!r.ok) throw new Error(`Upload failed (${r.status})`);
+    toast('✅ Trade journal synced to Google Drive!');
+  } catch (e) {
+    toast('⚠️ Drive sync failed: ' + e.message);
+  }
+  if (currentTab === 'settings') renderSettings(g('tabContent'));
+}
+
+async function restoreFromGoogleDrive() {
+  try {
+    await ensureDriveToken();
+    const id = await driveFindFile();
+    if (!id) return toast('⚠️ No backup found on Drive');
+    if (!confirm('Replace local data with the Drive backup?')) return;
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`, { headers: { Authorization: 'Bearer ' + driveToken } });
+    if (!r.ok) throw new Error(`Download failed (${r.status})`);
+    const d = sanitizeBackup(await r.json());
+    allJournals = d.journals;
+    allEntries = d.entries;
+    allTradingPlans = d.plans || allTradingPlans;
+    saveToStorage();
+    toast('✅ Restored from Google Drive');
+  } catch (e) {
+    toast('⚠️ Restore failed: ' + e.message);
+  }
+  switchTab(currentTab);
+}
+
+// NAVIGATION
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('slide-back'); s.classList.add('hidden'); });
+  g(id).classList.remove('hidden');
+  currentScreenId = id;
+}
+
+function pushScreen(id) {
+  if (currentScreenId) {
+    g(currentScreenId).classList.add('slide-back');
+    navHistory.push(currentScreenId);
+  }
+  g(id).classList.remove('hidden');
+  currentScreenId = id;
+}
+
+function goBack() {
+  if (!navHistory.length) {
+    switchTab('home');
+    return;
+  }
+  const prev = navHistory.pop();
+  g(currentScreenId).classList.add('hidden');
+  g(prev).classList.remove('slide-back');
+  g(prev).classList.remove('hidden');
+  currentScreenId = prev;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  if (currentScreenId !== 'mainScreen') {
+    document.querySelectorAll('.screen').forEach(s => {
+      if (s.id !== 'mainScreen') { s.classList.add('hidden'); s.classList.remove('slide-back'); }
+    });
+    g('mainScreen').classList.remove('hidden', 'slide-back');
+    currentScreenId = 'mainScreen';
+    navHistory = [];
+  }
+  document.querySelectorAll('.nav-item, .sidebar-item').forEach(n => n.classList.remove('active'));
+  g('nav-' + tab)?.classList.add('active');
+  g('side-' + tab)?.classList.add('active');
+
+  const body = g('tabContent');
+  if (tab === 'home') renderHome(body);
+  else if (tab === 'journals') renderJournals(body);
+  else if (tab === 'analysis') renderAnalysis(body);
+  else if (tab === 'calendar') renderCalendar(body);
+  else if (tab === 'settings') renderSettings(body);
+}
+
+function onHomeJournalChange(jid) {
+  homeJournalId = jid;
+  renderHome(g('tabContent'));
+}
+
+// ============================================================
+// HOME TAB
+// ============================================================
+function renderHome(el) {
+  let entries = allEntries;
+  let activeJournalObj = null;
+  if (homeJournalId) {
+    entries = allEntries.filter(e => e.journal_id === homeJournalId);
+    activeJournalObj = allJournals.find(j => j.id === homeJournalId);
+  }
+
+  const total = entries.length;
+  const wins = entries.filter(e => e.result?.toLowerCase() === 'win').length;
+  const losses = entries.filter(e => e.result?.toLowerCase() === 'loss').length;
+  const be = entries.filter(e => e.result?.toLowerCase() === 'breakeven').length;
+  const totalPnl = entries.reduce((a, e) => a + (parseFloat(e.pnl) || 0), 0);
+  const winRate = total > 0 ? Math.round(wins / total * 100) : 0;
+  const recent = entries.slice(0, 5);
+
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+  el.innerHTML = `
+  <div style="padding:16px;" class="dashboard-grid">
+    <div class="hm-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+      <div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Hey ${esc(userProfile.name.split(' ')[0])} 👋</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;">
+          ${isDark ? '☀️' : '🌙'}
+        </button>
+        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive" style="gap:6px;">
+          <span>☁️</span> Sync Drive
+        </button>
+        <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:210px;font-weight:700;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
+          <option value="" ${!homeJournalId ? 'selected' : ''}>📊 Overall (All Journals)</option>
+          ${allJournals.map(j => `<option value="${j.id}" ${j.id === homeJournalId ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
+        </select>
+        <button class="btn bp btn-sm" onclick="openAddEntry()" style="gap:6px;padding:10px 18px;">＋ New Trade</button>
+      </div>
+    </div>
+
+    <div class="hm-stats stats-grid">
+      <div class="stat-card">
+        <div class="sv" style="color:var(--accent);">${total}</div>
+        <div class="sl">Total Trades</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" style="color:${winRate>=50?'var(--win)':'var(--loss)'}">${winRate}%</div>
+        <div class="sl">Win Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" style="color:var(--win);">${wins}</div>
+        <div class="sl">Wins</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" style="color:${totalPnl>=0?'var(--win)':'var(--loss)'};">${totalPnl>=0?'+$':'-$'}${Math.abs(totalPnl).toFixed(2)}</div>
+        <div class="sl">Total P&L</div>
+      </div>
+    </div>
+
+    <div class="hm-chart">
+      ${total > 0 ? `
+      <div class="card" style="margin-bottom:16px;padding:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.5px;">TRADE DISTRIBUTION ${activeJournalObj ? `(${esc(activeJournalObj.name)})` : ''}</div>
+          <span style="font-size:11px;color:var(--muted);font-weight:600;">${total} Trades Logged</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px;">
+          ${renderDonut(wins, losses, be, total)}
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+              <span style="color:var(--win);font-weight:700;">✅ Wins</span>
+              <span style="font-weight:700;">${wins}</span>
+            </div>
+            <div class="pb" style="margin-bottom:12px;"><div class="pf pw" style="width:${wins/total*100}%;"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+              <span style="color:var(--loss);font-weight:700;">❌ Losses</span>
+              <span style="font-weight:700;">${losses}</span>
+            </div>
+            <div class="pb" style="margin-bottom:12px;"><div class="pf pl" style="width:${losses/total*100}%;"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+              <span style="color:var(--be);font-weight:700;">⚡ Breakeven</span>
+              <span style="font-weight:700;">${be}</span>
+            </div>
+            <div class="pb"><div class="pf" style="background:var(--be);width:${be/total*100}%;"></div></div>
+          </div>
+        </div>
+      </div>` : `
+      <div class="card" style="margin-bottom:16px;padding:24px;text-align:center;color:var(--muted);">
+        <div style="font-size:32px;margin-bottom:8px;">📊</div>
+        <div style="font-weight:700;">No trades logged in this account yet</div>
+        <div style="font-size:12px;margin-top:4px;">Tap + New Trade to record your first trade for this account.</div>
+      </div>`}
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="hm-actions">
+      <div class="sh"><span class="st">Quick Actions</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+        <button class="btn bs" onclick="switchTab('journals')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
+          <span style="font-size:20px;">📚</span> Journals
+        </button>
+        <button class="btn bs" onclick="openFilterScreen()" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
+          <span style="font-size:20px;">🔍</span> Filter
+        </button>
+        <button class="btn bs" onclick="openTradingPlans()" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
+          <span style="font-size:20px;">📘</span> Trading Plans
+        </button>
+        <button class="btn bs" onclick="switchTab('analysis')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
+          <span style="font-size:20px;">📊</span> Analysis
+        </button>
+        <button class="btn bs" onclick="switchTab('calendar')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;grid-column: span 2;">
+          <span style="font-size:20px;">📅</span> Calendar
+        </button>
+      </div>
+    </div>
+
+    <div class="hm-recent">
+      <div class="sh">
+        <span class="st">Recent Entries ${activeJournalObj ? `(${esc(activeJournalObj.name)})` : ''}</span>
+        <button onclick="switchTab('journals')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">View All</button>
+      </div>
+      ${recent.length === 0
+        ? `<div class="es"><div class="ei">📝</div><h3>No entries yet</h3><p>Tap + New Trade above to start!</p></div>`
+        : recent.map(e => renderEC(e, true)).join('')}
+    </div>
+
+    <div class="hm-journals">
+      <div class="sh" style="margin-top:10px;">
+        <span class="st">My Journals (${allJournals.length})</span>
+        <button onclick="openModal('addJournalModal')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">+ New</button>
+      </div>
+      ${allJournals.slice(0, 3).map(j => renderJC(j)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderDonut(wins, losses, be, total) {
+  if (total === 0) return '';
+  const r = 44, cx = 60, cy = 60, circ = 2 * Math.PI * r;
+  const wDash = (wins / total) * circ;
+  const lDash = (losses / total) * circ;
+  const beDash = (be / total) * circ;
+  const lOff = -(wDash);
+  const beOff = -(wDash + lDash);
+
+  return `<div class="donut-wrap">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="${wDash} ${circ}" stroke-dashoffset="0"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="${lDash} ${circ}" stroke-dashoffset="${lOff}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="${beDash} ${circ}" stroke-dashoffset="${beOff}"/>
+    </svg>
+    <div class="donut-center">
+      <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);">${Math.round(wins/total*100)}%</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;">WIN RATE</div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// FILTER & EXPORT SCREEN
+// ============================================================
+function openFilterScreen() {
+  pushScreen('filterScreen');
+  renderFilterScreen();
+}
+
+function renderFilterScreen() {
+  const uniquePairs = [...new Set(allEntries.map(e => e.pair).filter(Boolean))].sort();
+
+  g('filterBody').innerHTML = `
+    <div class="card" style="margin-bottom:20px;">
+      <div style="font-size:14px;font-weight:800;margin-bottom:16px;">🔍 Filter Criteria</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="fg">
+          <label class="fl">Journal</label>
+          <select class="fs" id="fl_journal" onchange="applyFilters()">
+            <option value="">All Journals</option>
+            ${allJournals.map(j => `<option value="${j.id}">${esc(j.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Pair / Instrument</label>
+          <select class="fs" id="fl_pair" onchange="applyFilters()">
+            <option value="">All Pairs</option>
+            ${uniquePairs.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Result</label>
+          <select class="fs" id="fl_result" onchange="applyFilters()">
+            <option value="">All Results</option>
+            <option value="Win">Win</option>
+            <option value="Loss">Loss</option>
+            <option value="Breakeven">Breakeven</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Direction</label>
+          <select class="fs" id="fl_dir" onchange="applyFilters()">
+            <option value="">All Directions</option>
+            <option value="Buy">Buy (Long)</option>
+            <option value="Sell">Sell (Short)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Timeframe</label>
+          <select class="fs" id="fl_tf" onchange="applyFilters()">
+            <option value="">All Timeframes</option>
+            ${['M1','M5','M15','H1','H4','Daily'].map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Session</label>
+          <select class="fs" id="fl_session" onchange="applyFilters()">
+            <option value="">All Sessions</option>
+            <option value="London">London</option>
+            <option value="New York">New York</option>
+            <option value="Asian">Asian</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+        <button class="btn bs btn-sm" onclick="resetFilters()">Reset Filters</button>
+      </div>
+    </div>
+
+    <div id="filterResultsSummary" style="margin-bottom:16px;"></div>
+    <div id="filterResultsList"></div>
+  `;
+
+  applyFilters();
+}
+
+function applyFilters() {
+  const jid = g('fl_journal')?.value || '';
+  const pair = g('fl_pair')?.value || '';
+  const res = g('fl_result')?.value || '';
+  const dir = g('fl_dir')?.value || '';
+  const tf = g('fl_tf')?.value || '';
+  const sess = g('fl_session')?.value || '';
+
+  let list = allEntries.filter(e => {
+    if (jid && e.journal_id !== jid) return false;
+    if (pair && e.pair !== pair) return false;
+    if (res && e.result?.toLowerCase() !== res.toLowerCase()) return false;
+    if (dir && e.direction?.toLowerCase() !== dir.toLowerCase()) return false;
+    if (tf && e.timeframe !== tf) return false;
+    if (sess && e.session !== sess) return false;
+    return true;
+  });
+
+  window._filteredEntries = list;
+
+  const total = list.length;
+  const wins = list.filter(e => e.result?.toLowerCase() === 'win').length;
+  const wr = total > 0 ? Math.round(wins / total * 100) : 0;
+  const pnl = list.reduce((a, e) => a + (parseFloat(e.pnl) || 0), 0);
+
+  const summary = g('filterResultsSummary');
+  if (summary) {
+    summary.innerHTML = `
+      <div class="card" style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--surface2);">
+        <div>Matches: <b>${total} trades</b></div>
+        <div>Win Rate: <b style="color:${wr>=50?'var(--win)':'var(--loss)'};">${wr}%</b></div>
+        <div>Filtered P&L: <b style="color:${pnl>=0?'var(--win)':'var(--loss)'};">${pnl>=0?'+$':'-$'}${Math.abs(pnl).toFixed(2)}</b></div>
+      </div>
+    `;
+  }
+
+  const resList = g('filterResultsList');
+  if (resList) {
+    resList.innerHTML = list.length === 0
+      ? `<div class="es"><div class="ei">🔍</div><h3>No matching trades</h3><p>Adjust your filter criteria.</p></div>`
+      : list.map(e => renderEC(e, true)).join('');
+  }
+}
+
+function resetFilters() {
+  ['fl_journal','fl_pair','fl_result','fl_dir','fl_tf','fl_session'].forEach(id => {
+    const el = g(id);
+    if (el) el.value = '';
+  });
+  applyFilters();
+}
+
+function exportFilteredExcel() {
+  const list = window._filteredEntries || allEntries;
+  if (!list.length) return toast('⚠️ No entries to export');
+
+  const ws = XLSX.utils.json_to_sheet(list.map(e => ({
+    Pair: e.pair,
+    Direction: e.direction,
+    Result: e.result,
+    'P&L ($)': e.pnl,
+    Timeframe: e.timeframe,
+    Session: e.session,
+    Date: e.entry_date,
+    'R:R': e.rr_ratio,
+    Emotion: e.emotion,
+    Notes: e.notes
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'FilteredTrades');
+  XLSX.writeFile(wb, `Trade_Filtered_Trades_${localDate()}.xlsx`);
+  toast('📥 Filtered Excel file downloaded!');
+}
+
+// ============================================================
+// ANALYSIS TAB
+// ============================================================
+function renderAnalysis(el) {
+  const selJid = window._analysisJournalId || '';
+  let entries = allEntries;
+  if (selJid) entries = entries.filter(e => e.journal_id === selJid);
+
+  const total = entries.length;
+  const wins = entries.filter(e => e.result?.toLowerCase() === 'win').length;
+  const losses = entries.filter(e => e.result?.toLowerCase() === 'loss').length;
+  const be = entries.filter(e => e.result?.toLowerCase() === 'breakeven').length;
+  const totalPnl = entries.reduce((a, e) => a + (parseFloat(e.pnl) || 0), 0);
+  const winRate = total > 0 ? Math.round(wins / total * 100) : 0;
+
+  const pairMap = {};
+  entries.forEach(e => {
+    if (!pairMap[e.pair]) pairMap[e.pair] = { pair: e.pair, wins: 0, losses: 0, total: 0, pnl: 0 };
+    pairMap[e.pair].total++;
+    pairMap[e.pair].pnl += parseFloat(e.pnl) || 0;
+    if (e.result?.toLowerCase() === 'win') pairMap[e.pair].wins++;
+    if (e.result?.toLowerCase() === 'loss') pairMap[e.pair].losses++;
+  });
+  const pairStats = Object.values(pairMap).map(p => ({
+    ...p,
+    winRate: p.total > 0 ? (p.wins / p.total * 100).toFixed(1) : '0'
+  })).sort((a,b) => b.total - a.total);
+
+  el.innerHTML = `
+  <div style="padding:16px;">
+    <div class="fg" style="margin-bottom:24px;">
+      <label class="fl">SELECT JOURNAL</label>
+      <select class="fs" id="analysisJournalSelector" onchange="onAnalysisJournalChange(this.value)" style="font-weight:700;padding:14px;">
+        <option value="" ${!selJid?'selected':''}>📊 Overall (All Journals)</option>
+        ${allJournals.map(j => `<option value="${j.id}" ${j.id===selJid?'selected':''}>${esc(j.name)}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;padding:24px;">
+      <div class="fl" style="margin-bottom:16px;">TRADE DISTRIBUTION</div>
+      <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="donut-wrap" style="width:130px;height:130px;">
+            <svg width="130" height="130" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="${(total>0?wins/total:0)*276} 276" stroke-dashoffset="0"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="${(total>0?losses/total:0)*276} 276" stroke-dashoffset="${-((total>0?wins/total:0)*276)}"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="${(total>0?Math.max(total-wins-losses,0)/total:0)*276} 276" stroke-dashoffset="${-((total>0?(wins+losses)/total:0)*276)}"/>
+            </svg>
+            <div class="donut-center">
+              <div style="font-size:22px;font-weight:800;font-family:var(--font-mono);">${winRate}%</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;">Win Rate</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:240px;">
+          <div style="margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
+              <span style="color:var(--win);font-weight:700;">✅ Wins</span>
+              <span style="font-weight:800;">${wins}</span>
+            </div>
+            <div class="pb" style="height:10px;"><div class="pf pw" style="width:${total>0?wins/total*100:0}%;"></div></div>
+          </div>
+          <div style="margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
+              <span style="color:var(--loss);font-weight:700;">❌ Losses</span>
+              <span style="font-weight:800;">${losses}</span>
+            </div>
+            <div class="pb" style="height:10px;"><div class="pf pl" style="width:${total>0?losses/total*100:0}%;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
+              <span style="color:var(--be);font-weight:700;">⚡ Breakeven</span>
+              <span style="font-weight:800;">${be}</span>
+            </div>
+            <div class="pb" style="height:10px;"><div class="pf" style="background:var(--be);width:${total>0?be/total*100:0}%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;padding:24px;">
+      <div class="fl" style="margin-bottom:18px;">📈 PAIR PERFORMANCE</div>
+      ${pairStats.length === 0 ? `<div style="color:var(--muted);text-align:center;padding:20px;">No trades logged yet</div>` : `
+        <div class="chart-bar-wrap" style="height:160px;margin-bottom:20px;">
+          ${pairStats.map(p => `
+            <div class="chart-bar" style="background:${parseFloat(p.winRate)>=50?'rgba(34,197,94,.18)':'rgba(239,68,68,.18)'};height:${p.winRate}%;border:1px solid ${parseFloat(p.winRate)>=50?'rgba(34,197,94,.5)':'rgba(239,68,68,.5)'};">
+              <div class="bar-val" style="color:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};">${p.winRate}%</div>
+              <div class="bar-label">${esc(p.pair)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="div"></div>
+        ${pairStats.map(p => `
+          <div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);">
+            <div style="font-weight:800;min-width:80px;font-size:14px;color:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};">${esc(p.pair)}</div>
+            <div style="flex:1;"><div class="pb" style="height:10px;"><div class="pf" style="background:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};width:${p.winRate}%;"></div></div></div>
+            <div style="font-size:13px;color:var(--muted);min-width:110px;text-align:right;font-weight:600;">${p.winRate}% · ${p.wins}W ${p.losses}L</div>
+          </div>
+        `).join('')}
+      `}
+    </div>
+  </div>`;
+}
+
+function onAnalysisJournalChange(jid) {
+  window._analysisJournalId = jid;
+  renderAnalysis(g('tabContent'));
+}
+
+// ============================================================
+// CALENDAR TAB
+// ============================================================
+function renderCalendar(el) {
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  const today = new Date();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const entryByDate = {};
+  allEntries.forEach(e => {
+    const d = e.entry_date;
+    if (!entryByDate[d]) entryByDate[d] = [];
+    entryByDate[d].push(e);
+  });
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const daysInPrev = new Date(y, m, 0).getDate();
+  let days = [];
+  for (let i = firstDay - 1; i >= 0; i--) days.push({ day: daysInPrev - i, other: true });
+  for (let i = 1; i <= daysInMonth; i++) days.push({ day: i, other: false });
+  while (days.length % 7 !== 0) days.push({ day: days.length - daysInMonth - firstDay + 1, other: true });
+
+  const weekRows = [];
+  for (let i = 0; i < days.length; i += 7) weekRows.push(days.slice(i, i + 7));
+
+  let displayedEntries = [...allEntries];
+  if (selectedCalPeriod === 'month') {
+    const mStr = `${y}-${String(m+1).padStart(2,'0')}`;
+    displayedEntries = displayedEntries.filter(e => e.entry_date?.startsWith(mStr));
+  } else if (selectedCalPeriod === 'week') {
+    const now = new Date();
+    const startOfWeek = localDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()));
+    const endOfWeek = localDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 6));
+    displayedEntries = displayedEntries.filter(e => e.entry_date >= startOfWeek && e.entry_date <= endOfWeek);
+  }
+
+  el.innerHTML = `
+    <div class="cal-nav">
+      <button class="icon-btn" onclick="navMonth(-1)">‹</button>
+      <div class="cal-nav-title">${months[m]} ${y}</div>
+      <button class="icon-btn" onclick="navMonth(1)">›</button>
+    </div>
+    
+    <div class="cal-grid">
+      <div class="cdl">Sun</div><div class="cdl">Mon</div><div class="cdl">Tue</div><div class="cdl">Wed</div><div class="cdl">Thu</div><div class="cdl">Fri</div><div class="cdl">Sat</div>
+      ${weekRows.map(week => {
+        const rowCells = week.map(d => {
+          if (d.other) return `<div class="cd other-month"><span class="cd-daynum">${d.day}</span></div>`;
+          const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
+          const de = entryByDate[ds] || [];
+          const isToday = d.day === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+          const dayPnl = de.reduce((sum, e) => sum + (parseFloat(e.pnl) || 0), 0);
+          let cls = isToday ? 'today ' : '';
+          if (de.length > 0) {
+            cls += dayPnl > 0 ? 'has-win ' : dayPnl < 0 ? 'has-loss ' : 'has-mixed ';
+          }
+          return `<div class="cd ${cls}" onclick="clickCalDate('${ds}')">
+            <span class="cd-daynum">${d.day}</span>
+            ${de.length > 0 ? `
+              <div class="cd-bottom">
+                <span class="cd-count">${de.length} ⇄</span>
+                <span class="cd-pnl" style="color:${dayPnl>0?'var(--win)':dayPnl<0?'var(--loss)':'var(--be)'};">${dayPnl>0?'+':''}${Math.round(dayPnl)}</span>
+              </div>` : ''}
+          </div>`;
+        }).join('');
+
+        const realDays = week.filter(d => !d.other);
+        let wCount = 0, wPnl = 0;
+        realDays.forEach(d => {
+          const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
+          const de = entryByDate[ds] || [];
+          wCount += de.length;
+          wPnl += de.reduce((s, e) => s + (parseFloat(e.pnl) || 0), 0);
+        });
+
+        return `${rowCells}
+          <div class="cal-week-bar">
+            <span>Week: <b>${wCount}</b> trades</span>
+            <span style="font-weight:700;color:${wPnl>0?'var(--win)':wPnl<0?'var(--loss)':'var(--muted)'};">${wCount ? (wPnl>0?'+':'') + wPnl.toFixed(2) : '—'}</span>
+          </div>`;
+      }).join('')}
+    </div>
+
+    <div class="cal-pills">
+      <button class="cal-pill ${selectedCalPeriod==='all'?'active':''}" onclick="setCalPeriod('all')">All</button>
+      <button class="cal-pill ${selectedCalPeriod==='week'?'active':''}" onclick="setCalPeriod('week')">This Week</button>
+      <button class="cal-pill ${selectedCalPeriod==='month'?'active':''}" onclick="setCalPeriod('month')">This Month</button>
+    </div>
+
+    <div style="padding:16px 20px;">
+      ${displayedEntries.length === 0 ? `
+        <div class="es"><div class="ei">📅</div><h3>No trades for this period</h3></div>
+      ` : displayedEntries.map(e => {
+        const pnl = parseFloat(e.pnl) || 0;
+        return `
+        <div class="card" onclick="openEntry('${esc(e.id)}')" style="cursor:pointer;padding:18px 20px;margin-bottom:12px;border-radius:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:16px;font-weight:800;letter-spacing:-.2px;">${esc(e.pair)}</div>
+            <span class="badge ${resBadge(e.result)}" style="font-size:12px;padding:4px 12px;border-radius:12px;">${esc(e.result)}</span>
+          </div>
+          <div class="em" style="margin-bottom:12px;">
+            <span>${esc(e.direction)}</span>
+            <span>${esc(e.timeframe)}</span>
+            <span>${esc(e.session)}</span>
+            <span>${esc(e.entry_date)}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:${pnl>=0?'var(--win)':'var(--loss)'};">
+              ${pnl>=0?'+':''}${pnl.toFixed(2)}
+            </div>
+            <div style="font-size:13px;color:var(--muted);font-weight:700;">
+              RR: 1:${e.rr_ratio}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function navMonth(dir) {
+  calDate.setMonth(calDate.getMonth() + dir);
+  renderCalendar(g('tabContent'));
+}
+
+function setCalPeriod(p) {
+  selectedCalPeriod = p;
+  renderCalendar(g('tabContent'));
+}
+
+function clickCalDate(ds) {
+  const de = allEntries.filter(e => e.entry_date === ds);
+  if (!de.length) return toast(`No trades recorded on ${ds}`);
+  openEntry(de[0].id);
+}
+
+// ============================================================
+// SETTINGS TAB
+// ============================================================
+function renderSettings(el) {
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+  el.innerHTML = `
+  <div style="padding:16px;max-width:800px;margin:0 auto;">
+    <div style="font-size:20px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+      ⚙️ Settings
+    </div>
+
+    <div class="card">
+      <div class="fl" style="margin-bottom:12px;">PROFILE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;" id="profName">${esc(userProfile.name)}</div>
+            <div style="font-size:13px;color:var(--muted);" id="profHandle">${esc(userProfile.handle)} · ${esc(userProfile.email)}</div>
+          </div>
+        </div>
+        <button class="btn bs btn-sm" onclick="editProfile()">✏️ Edit</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fl" style="margin-bottom:12px;">APPEARANCE</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;font-size:15px;">Dark Mode</div>
+        </div>
+        <button class="btn bs btn-sm" onclick="toggleTheme()" style="gap:6px;">
+          ${isDark ? '🌙 Dark' : '☀️ Light'}
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fl" style="margin-bottom:12px;">GOOGLE DRIVE & BACKUP</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-weight:700;color:${syncState==='synced'?'var(--win)':'var(--muted)'};display:flex;align-items:center;gap:6px;">
+            ${syncState==='synced' ? '✅ Auto-sync on' : syncState==='syncing' ? '🔄 Syncing…' : syncState==='offline' ? '📴 Offline – will sync when online' : '🔑 Reconnect Google to sync'}
+          </div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px;">
+            ${lastSyncedAt ? 'Last synced ' + new Date(lastSyncedAt).toLocaleTimeString() + '. ' : ''}Changes save to your Google Drive automatically; the newest copy loads when you sign in.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()">🔁 Sync Now</button>
+          <button class="btn bs btn-sm" onclick="restoreFromGoogleDrive()">⬇️ Force Restore</button>
+          <button class="btn bs btn-sm" onclick="exportDataBackup()">💾 Download JSON</button>
+          <button class="btn bs btn-sm" onclick="g('importFile').click()">📂 Import JSON</button>
+          <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importDataBackup(this)">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fl" style="margin-bottom:12px;">ACCOUNT</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
+        Signed in with Google (${esc(userProfile.email)}). Your data lives in your own Google Drive and is cached in this browser.
+      </div>
+      <button class="btn bd btn-sm" onclick="handleLogout()">Log Out of Portal</button>
+    </div>
+
+    <div class="card" style="text-align:center;padding:24px;background:none;border:none;box-shadow:none;">
+      <div style="font-size:15px;font-weight:800;">Trade Journal</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Professional Trading Suite Journal</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:14px;">
+        Created by <b style="color:var(--accent);">Professional Trading Suite</b>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleTheme() {
+  const cur = document.body.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', next);
+  toast(`Switched to ${next} mode`);
+  if (currentTab === 'settings') renderSettings(g('tabContent'));
+  else if (currentTab === 'home') renderHome(g('tabContent'));
+}
+
+function editProfile() {
+  const newName = prompt('Enter your name:', userProfile.name);
+  if (newName) userProfile.name = newName.trim();
+  const newHandle = prompt('Enter your handle:', userProfile.handle);
+  if (newHandle) userProfile.handle = newHandle.trim();
+  saveToStorage();
+  syncUserProfileChrome();
+  renderSettings(g('tabContent'));
+  toast('✅ Profile updated');
+}
+
+function exportDataBackup() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem(STORAGE_KEY));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `Trade_Journal_Backup_${localDate()}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  toast('💾 Backup downloaded!');
+}
+
+function importDataBackup(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = sanitizeBackup(JSON.parse(reader.result));
+      if (!confirm('Replace current data with this backup?')) return;
+      allJournals = d.journals;
+      allEntries = d.entries;
+      allTradingPlans = d.plans || allTradingPlans;
+      if (saveToStorage()) toast('✅ Backup restored');
+      switchTab(currentTab);
+    } catch (e) {
+      toast('⚠️ Import failed: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// 5-IMAGE LOGIC: ADD & EDIT TRADE ENTRY
+// ============================================================
+function openAddEntry() {
+  editingEntryId = null;
+  currentSlotImages = ['', '', '', '', ''];
+  g('entryModalTitle').textContent = 'New Trade Entry';
+
+  const sel = g('entryJournalId');
+  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===(homeJournalId || currentJournal?.id)?'selected':''}>${esc(j.name)}</option>`).join('');
+
+  g('entryPair').value = '';
+  g('entryDirection').value = 'Buy';
+  g('entryResult').value = 'Win';
+  g('entryPnl').value = '';
+  g('entryTimeframe').value = 'M15';
+  g('entrySession').value = 'New York';
+  g('entryDate').value = localDate();
+  g('entryRr').value = '2.0';
+  g('entryEmotion').value = 'Disciplined & Calm';
+  g('entryNotes').value = '';
+
+  syncImageSlotPreviews();
+  openModal('entryModal');
+}
+
+function openEditEntry() {
+  const e = window._curEntry;
+  if (!e) return;
+  editingEntryId = e.id;
+  currentSlotImages = ['', '', '', '', ''];
+  if (e.chart_urls && Array.isArray(e.chart_urls)) {
+    e.chart_urls.forEach((url, idx) => {
+      if (idx < 5) currentSlotImages[idx] = url;
+    });
+  } else if (e.chart_url) {
+    currentSlotImages[0] = e.chart_url;
+  }
+
+  g('entryModalTitle').textContent = 'Edit Trade Entry';
+
+  const sel = g('entryJournalId');
+  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===e.journal_id?'selected':''}>${esc(j.name)}</option>`).join('');
+
+  g('entryPair').value = e.pair || '';
+  g('entryDirection').value = e.direction || 'Buy';
+  g('entryResult').value = e.result || 'Win';
+  g('entryPnl').value = e.pnl || '';
+  g('entryTimeframe').value = e.timeframe || 'M15';
+  g('entrySession').value = e.session || 'New York';
+  g('entryDate').value = e.entry_date || '';
+  g('entryRr').value = e.rr_ratio || '';
+  g('entryEmotion').value = e.emotion || 'Disciplined & Calm';
+  g('entryNotes').value = e.notes || '';
+
+  syncImageSlotPreviews();
+  openModal('entryModal');
+}
+
+function onUrlInput(slotIdx, val) {
+  currentSlotImages[slotIdx] = val.trim();
+  updateSlotPreview(slotIdx);
+}
+
+function compressImage(file, maxDim = 1280, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Not a valid image')); };
+    img.src = url;
+  });
+}
+
+async function onFileInput(slotIdx, e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    currentSlotImages[slotIdx] = await compressImage(file);
+    updateSlotPreview(slotIdx);
+    toast(`📷 Chart ${slotIdx + 1} attached`);
+  } catch (err) {
+    toast('⚠️ ' + err.message);
+  }
+}
+
+function clearSlot(slotIdx) {
+  currentSlotImages[slotIdx] = '';
+  const slotEl = document.querySelector(`.image-slot[data-slot="${slotIdx}"]`);
+  if (slotEl) {
+    const urlInput = slotEl.querySelector('.img-url-input');
+    if (urlInput) urlInput.value = '';
+    const fileInput = slotEl.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
+  }
+  updateSlotPreview(slotIdx);
+}
+
+function syncImageSlotPreviews() {
+  for (let i = 0; i < 5; i++) {
+    const slotEl = document.querySelector(`.image-slot[data-slot="${i}"]`);
+    if (slotEl) {
+      const urlInput = slotEl.querySelector('.img-url-input');
+      const val = currentSlotImages[i] || '';
+      if (urlInput) urlInput.value = val.startsWith('data:') ? '' : val;
+    }
+    updateSlotPreview(i);
+  }
+}
+
+function updateSlotPreview(slotIdx) {
+  const img = g(`preview-${slotIdx}`);
+  if (!img) return;
+  const src = currentSlotImages[slotIdx];
+  if (src) {
+    img.src = src;
+    img.style.display = 'block';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+  }
+}
+
+function saveEntry() {
+  const pair = g('entryPair').value.trim();
+  if (!pair) return toast('⚠️ Please enter a pair/instrument');
+
+  const jid = g('entryJournalId').value || allJournals[0]?.id;
+  const pnlVal = parseFloat(g('entryPnl').value) || 0;
+  const validCharts = currentSlotImages.filter(url => Boolean(url && url.trim()));
+
+  const entryData = {
+    id: editingEntryId || 'e-' + Date.now(),
+    journal_id: jid,
+    pair: pair.toUpperCase(),
+    direction: g('entryDirection').value,
+    result: g('entryResult').value,
+    pnl: pnlVal,
+    timeframe: g('entryTimeframe').value,
+    session: g('entrySession').value,
+    entry_date: g('entryDate').value || localDate(),
+    rr_ratio: parseFloat(g('entryRr').value) || 1,
+    emotion: g('entryEmotion').value,
+    notes: g('entryNotes').value.trim(),
+    chart_urls: validCharts,
+    chart_url: validCharts[0] || ''
+  };
+
+  if (editingEntryId) {
+    allEntries = allEntries.map(e => e.id === editingEntryId ? entryData : e);
+    window._curEntry = entryData;
+    renderEntryDetail(entryData);
+    toast('✅ Entry updated');
+  } else {
+    allEntries.unshift(entryData);
+    toast('✅ Trade entry saved');
+  }
+
+  saveToStorage();
+  closeModal('entryModal');
+
+  if (currentScreenId === 'journalScreen') renderJEntries();
+  if (currentTab === 'home') renderHome(g('tabContent'));
+  else if (currentTab === 'calendar') renderCalendar(g('tabContent'));
+}
+
+// ENTRY DETAIL VIEW
+function openEntry(entryId) {
+  const entry = allEntries.find(e => e.id === entryId);
+  if (!entry) return;
+  window._curEntry = entry;
+  pushScreen('entryScreen');
+  renderEntryDetail(entry);
+}
+
+function openChart(idx) {
+  const e = window._curEntry || {};
+  const u = safeUrl((e.chart_urls || (e.chart_url ? [e.chart_url] : []))[idx]);
+  if (!u) return;
+  if (u.startsWith('data:')) {
+    fetch(u).then(r => r.blob()).then(b => window.open(URL.createObjectURL(b), '_blank'));
+  } else {
+    window.open(u, '_blank', 'noopener');
+  }
+}
+
+function renderEntryDetail(entry) {
+  const pnl = parseFloat(entry.pnl) || 0;
+  const charts = entry.chart_urls || (entry.chart_url ? [entry.chart_url] : []);
+
+  g('entryDetailBody').innerHTML = `
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-size:28px;font-weight:800;letter-spacing:-.5px;">${esc(entry.pair || '—')}</div>
+        <span class="badge ${resBadge(entry.result)}" style="font-size:14px;padding:6px 16px;">${esc(entry.result || '—')}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+        <div><div class="fl">DIRECTION</div><div style="font-weight:700;">${esc(entry.direction || '—')}</div></div>
+        <div><div class="fl">TIMEFRAME</div><div style="font-weight:700;">${esc(entry.timeframe || '—')}</div></div>
+        <div><div class="fl">SESSION</div><div style="font-weight:700;">${esc(entry.session || '—')}</div></div>
+        <div><div class="fl">DATE</div><div style="font-weight:700;">${esc(entry.entry_date || '—')}</div></div>
+        <div><div class="fl">R:R RATIO</div><div style="font-weight:700;">${formatRR(entry.rr_ratio)}</div></div>
+        <div><div class="fl">EMOTION</div><div style="font-weight:700;">${esc(entry.emotion || '—')}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:13px;color:var(--muted);font-weight:700;">NET P&L</div>
+        <div style="font-size:26px;font-weight:800;font-family:var(--font-mono);color:${pnl>=0?'var(--win)':'var(--loss)'};">${pnl>=0?'+$':'-$'}${Math.abs(pnl).toFixed(2)}</div>
+      </div>
+    </div>
+
+    ${entry.notes ? `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="fl">SETUP & NOTES</div>
+      <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;">${esc(entry.notes)}</div>
+    </div>` : ''}
+
+    ${charts.length > 0 ? `
+    <div class="card">
+      <div class="fl" style="margin-bottom:14px;">📸 ATTACHED CHARTS (${charts.length}/5)</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        ${charts.map((url, idx) => safeUrl(url) ? `
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">Chart ${idx + 1}</div>
+            <img src="${esc(safeUrl(url))}" alt="Chart ${idx+1}" style="width:100%;border-radius:12px;border:1px solid var(--border);cursor:pointer;display:block;" onclick="openChart(${idx})"/>
+          </div>
+        ` : '').join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function deleteCurrentEntry() {
+  const e = window._curEntry;
+  if (!e) return;
+  if (!confirm('Are you sure you want to delete this trade?')) return;
+  allEntries = allEntries.filter(it => it.id !== e.id);
+  saveToStorage();
+  toast('🗑️ Entry deleted');
+  goBack();
+  if (currentTab === 'home') renderHome(g('tabContent'));
+  else if (currentTab === 'calendar') renderCalendar(g('tabContent'));
+  else if (currentScreenId === 'journalScreen') renderJEntries();
+}
+
+// JOURNALS & TRADING PLANS
+function renderJournals(el) {
+  el.innerHTML = `<div style="padding:16px;">
+    <div class="sh">
+      <span class="st">Trading Journals</span>
+      <button class="btn bp btn-sm" onclick="openModal('addJournalModal')">+ New Journal</button>
+    </div>
+    ${allJournals.map(j => renderJC(j)).join('')}
+  </div>`;
+}
+
+function renderJC(j) {
+  const count = allEntries.filter(e => e.journal_id === j.id).length;
+  return `<div class="jc" onclick="openJournal('${j.id}')">
+    <div class="jdot" style="background:${j.color}22;border:2px solid ${j.color}55;">${jEmoji(j.color)}</div>
+    <div class="jinfo">
+      <div class="jname">${esc(j.name)}</div>
+      <div class="jcount">${count} entries · ${esc(j.description || 'No description')}</div>
+    </div>
+    <div style="color:${j.color};font-size:22px;font-weight:700;">›</div>
+  </div>`;
+}
+
+function openJournal(jid) {
+  currentJournal = allJournals.find(j => j.id === jid);
+  if (!currentJournal) return;
+  g('jScreenTitle').textContent = currentJournal.name;
+  activeFilter = 'all';
+  pushScreen('journalScreen');
+  renderJEntries();
+}
+
+function renderJEntries() {
+  const body = g('jEntriesBody');
+  let filtered = allEntries.filter(e => e.journal_id === currentJournal?.id);
+  if (activeFilter === 'win') filtered = filtered.filter(e => e.result?.toLowerCase() === 'win');
+  else if (activeFilter === 'loss') filtered = filtered.filter(e => e.result?.toLowerCase() === 'loss');
+  else if (activeFilter === 'buy') filtered = filtered.filter(e => e.direction?.toLowerCase() === 'buy');
+  else if (activeFilter === 'sell') filtered = filtered.filter(e => e.direction?.toLowerCase() === 'sell');
+
+  body.innerHTML = filtered.length === 0
+    ? `<div class="es"><div class="ei">📝</div><h3>No trades in this journal</h3><p>Tap ＋ at the top to add a trade!</p></div>`
+    : filtered.map(e => renderEC(e, true)).join('');
+}
+
+function filterE(type) {
+  activeFilter = type;
+  document.querySelectorAll('.ftab').forEach((t, i) =>
+    t.classList.toggle('active', ['all','win','loss','buy','sell'][i] === type)
+  );
+  renderJEntries();
+}
+
+function renderEC(e, clickable = false) {
+  const pnl = parseFloat(e.pnl) || 0;
+  return `<div class="ec" ${clickable ? `onclick="openEntry('${esc(e.id)}')"` : ''}>
+    <div class="eh">
+      <div style="font-size:16px;font-weight:800;letter-spacing:-.2px;">${esc(e.pair || '—')}</div>
+      <span class="badge ${resBadge(e.result)}">${esc(e.result || '—')}</span>
+    </div>
+    <div class="em">
+      <span>${esc(e.direction)}</span>
+      <span>${esc(e.timeframe)}</span>
+      <span>${esc(e.session)}</span>
+      <span>${esc(e.entry_date)}</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="epnl ${pnl>=0?'pos':'neg'}">${pnl>=0?'+$':'-$'}${Math.abs(pnl).toFixed(2)}</div>
+      ${e.rr_ratio ? `<div style="font-size:12px;color:var(--muted);font-weight:700;">RR: ${formatRR(e.rr_ratio)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function createJournal() {
+  const name = g('newJName').value.trim();
+  if (!name) return toast('⚠️ Please enter a journal name');
+
+  allJournals.push({
+    id: 'j-' + Date.now(),
+    name,
+    description: g('newJDesc').value.trim(),
+    color: selectedColor
+  });
+  saveToStorage();
+  closeModal('addJournalModal');
+  toast('✅ Journal created');
+  renderJournals(g('tabContent'));
+}
+
+function pickColor(c, el) {
+  selectedColor = c;
+  document.querySelectorAll('#colorPicker .color-circle').forEach(item => item.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function openTradingPlans() {
+  pushScreen('plansScreen');
+  renderTradingPlans();
+}
+
+function renderTradingPlans() {
+  const body = g('plansBody');
+  body.innerHTML = allTradingPlans.map(p => `
+    <div class="card">
+      <div style="font-size:16px;font-weight:800;margin-bottom:8px;">${esc(p.name)}</div>
+      <div style="font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--muted);">${esc(p.description)}</div>
+    </div>
+  `).join('');
+}
+
+function openCreatePlan() {
+  const name = prompt('Trading Plan Name:');
+  if (!name) return;
+  const desc = prompt('Strategy Rules (one per line):');
+  allTradingPlans.push({ id: 'p-' + Date.now(), name, description: desc || '' });
+  saveToStorage();
+  renderTradingPlans();
+  toast('✅ Trading Plan added');
+}
+
+function exportJournalExcel() {
+  if (!currentJournal) return;
+  const entries = allEntries.filter(e => e.journal_id === currentJournal.id);
+  if (!entries.length) return toast('⚠️ No entries to export');
+
+  const ws = XLSX.utils.json_to_sheet(entries.map(e => ({
+    Pair: e.pair,
+    Direction: e.direction,
+    Result: e.result,
+    'P&L ($)': e.pnl,
+    Timeframe: e.timeframe,
+    Session: e.session,
+    Date: e.entry_date,
+    'R:R': e.rr_ratio,
+    Emotion: e.emotion,
+    Notes: e.notes
+  })));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Trades');
+  XLSX.writeFile(wb, `${currentJournal.name}_Export_${localDate()}.xlsx`);
+  toast('📊 Excel file exported!');
+}
+
+// KEYBOARD SHORTCUTS
+window.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'n' || e.key === 'N') {
+    e.preventDefault();
+    openAddEntry();
+  } else if (e.key === 'f' || e.key === 'F') {
+    e.preventDefault();
+    openFilterScreen();
+  } else if (e.key === 'Escape') {
+    document.querySelectorAll('.mo.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// MODAL CONTROLS
+function openModal(id) { g(id).classList.add('open'); }
+function closeModal(id) { g(id).classList.remove('open'); }
+
+// INITIALIZATION
+window.addEventListener('DOMContentLoaded', () => {
+  initData();
+  if (userProfile.isLoggedIn) {
+    g('authScreen').classList.add('hidden');
+    g('mainScreen').classList.remove('hidden');
+    switchTab('home');
+  } else {
+    showScreen('authScreen');
+  }
+});
+</script>
+</body>
+</html>
