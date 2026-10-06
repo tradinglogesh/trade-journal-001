@@ -367,6 +367,24 @@ html, body {
 .jinfo { flex: 1; min-width: 0; }
 .jname { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jcount { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.jc.passed { background: linear-gradient(135deg, rgba(34,197,94,.16), rgba(34,197,94,.04)); border-color: #22c55e; }
+.jc.breached { background: linear-gradient(135deg, rgba(239,68,68,.14), rgba(239,68,68,.03)); border-color: #ef4444; }
+.jc.master { border-color: #f59e0b; }
+.jc.archived { opacity: .75; }
+.jc-wrap { flex: 1; min-width: 0; }
+.stage-badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; letter-spacing: .3px; background: rgba(99,102,241,.15); color: var(--accent); }
+.stage-badge.st-passed { background: rgba(34,197,94,.2); color: #16a34a; }
+.stage-badge.st-breached { background: rgba(239,68,68,.2); color: #dc2626; }
+.stage-badge.st-master { background: rgba(245,158,11,.2); color: #d97706; }
+.jmini { height: 6px; border-radius: 999px; background: var(--surface2); margin-top: 8px; overflow: hidden; }
+.jmini > div { height: 100%; border-radius: 999px; }
+.jpanel { border: 1px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 16px; background: var(--surface); }
+.jpanel.passed { border-color: #22c55e; background: linear-gradient(135deg, rgba(34,197,94,.14), rgba(34,197,94,.03)); }
+.jpanel.breached { border-color: #ef4444; background: linear-gradient(135deg, rgba(239,68,68,.12), rgba(239,68,68,.03)); }
+.jgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 12px 0; }
+.jgrid > div { background: var(--surface2); border-radius: 10px; padding: 10px 12px; }
+.jgrid .l { font-size: 10px; font-weight: 800; color: var(--muted); letter-spacing: .4px; }
+.jgrid .v { font-size: 16px; font-weight: 800; font-family: var(--font-mono); margin-top: 3px; }
 
 /* MODALS */
 .mo {
@@ -1119,6 +1137,18 @@ html, body {
         <input class="fi" id="newJDesc" placeholder="Brief rules or purpose..."/>
       </div>
       <div class="fg">
+        <label class="fl">Account Stage</label>
+        <select class="fs" id="newJStage" onchange="g('newJSplitWrap').style.display=this.value==='master'?'block':'none'">
+          <option value="phase1">Phase 1 (Challenge)</option>
+          <option value="phase2">Phase 2 (Verification)</option>
+          <option value="master">Master (Funded)</option>
+        </select>
+      </div>
+      <div class="fg" id="newJSplitWrap" style="display:none;">
+        <label class="fl">Profit Split % (your share)</label>
+        <input class="fi" id="newJSplit" type="number" min="0" max="100" step="any" placeholder="80"/>
+      </div>
+      <div class="fg">
         <label class="fl">Account Size ($) - optional</label>
         <input class="fi" id="newJBalance" type="number" min="0" step="any" placeholder="e.g. 5000"/>
       </div>
@@ -1144,6 +1174,24 @@ html, body {
     <div class="ma">
       <button class="btn bs" onclick="closeModal('addJournalModal')">Cancel</button>
       <button class="btn bp" style="flex:2" id="jModalSave" onclick="createJournal()">Create Journal</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="withdrawModal">
+  <div class="ms">
+    <div class="mhd">
+      <div class="mt">💸 Add Withdrawal</div>
+      <button class="icon-btn" onclick="closeModal('withdrawModal')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Amount ($)</label><input class="fi" id="wdAmount" type="number" min="0" step="any" placeholder="e.g. 400"/></div>
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="wdDate" type="date"/></div>
+      <div class="fg"><label class="fl">Note</label><input class="fi" id="wdNote" placeholder="Optional"/></div>
+    </div>
+    <div class="ma">
+      <button class="btn bs" onclick="closeModal('withdrawModal')">Cancel</button>
+      <button class="btn bp" style="flex:2" onclick="saveWithdrawal()">Save Withdrawal</button>
     </div>
   </div>
 </div>
@@ -1710,8 +1758,8 @@ function renderHome(el) {
         <div class="sl">Win Rate</div>
       </div>
       <div class="stat-card">
-        <div class="sv" style="color:var(--win);">${wins}</div>
-        <div class="sl">Wins</div>
+        <div class="sv" style="color:#f59e0b;">$${allJournals.reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0).toFixed(2)}</div>
+        <div class="sl">💸 Withdrawn</div>
       </div>
       <div class="stat-card">
         <div class="sv" style="color:${totalPnl>=0?'var(--win)':'var(--loss)'};">${totalPnl>=0?'+$':'-$'}${Math.abs(totalPnl).toFixed(2)}</div>
@@ -1791,7 +1839,7 @@ function renderHome(el) {
         <span class="st">My Journals (${allJournals.length})</span>
         <button onclick="openNewJournal()" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">+ New</button>
       </div>
-      ${allJournals.slice(0, 3).map(j => renderJC(j)).join('')}
+      ${allJournals.filter(j => !j.archived).slice(0, 3).map(j => renderJC(j)).join('')}
     </div>
   </div>`;
 }
@@ -2775,27 +2823,177 @@ function deleteCurrentEntry() {
 
 // JOURNALS & TRADING PLANS
 function renderJournals(el) {
+  const active = allJournals.filter(j => !j.archived);
+  const archived = allJournals.filter(j => j.archived);
   el.innerHTML = `<div style="padding:16px;">
     <div class="sh">
       <span class="st">Trading Journals</span>
       <button class="btn bp btn-sm" onclick="openNewJournal()">+ New Journal</button>
     </div>
-    ${allJournals.map(j => renderJC(j)).join('')}
+    ${active.map(j => renderJC(j)).join('')}
+    ${archived.length ? `<div class="sh" style="margin-top:20px;"><span class="st">📦 Archived (${archived.length})</span></div>${archived.map(j => renderJC(j)).join('')}` : ''}
   </div>`;
 }
 
+const STAGE_LABEL = { phase1: 'PHASE 1', phase2: 'PHASE 2', master: 'MASTER' };
+
+function jStats(j) {
+  const es = allEntries.filter(e => e.journal_id === j.id)
+    .map((e, i) => ({ d: e.entry_date || '', i, p: parseFloat(e.pnl) || 0 }))
+    .sort((a, b) => a.d.localeCompare(b.d) || a.i - b.i);
+  const bal = j.balance > 0 ? j.balance : 0;
+  const stage = j.stage || 'phase1';
+  const net = es.reduce((a, x) => a + x.p, 0);
+  const wd = (j.withdrawals || []).reduce((a, w) => a + (parseFloat(w.amount) || 0), 0);
+  let eq = bal, peak = bal, maxDD = 0;
+  const day = {};
+  es.forEach(x => { eq += x.p; peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); day[x.d] = (day[x.d] || 0) + x.p; });
+  const worstDay = Math.abs(Math.min(0, ...Object.values(day)));
+  const profitPct = bal ? net / bal * 100 : 0;
+  const ddPct = bal ? maxDD / bal * 100 : 0;
+  const dayPct = bal ? worstDay / bal * 100 : 0;
+  const breached = !!j.breached || (bal > 0 && ((j.maxLossPct > 0 && ddPct >= j.maxLossPct) || (j.dailyLossPct > 0 && dayPct >= j.dailyLossPct)));
+  const passed = stage !== 'master' && bal > 0 && j.targetPct > 0 && profitPct >= j.targetPct;
+  const split = j.profitSplit > 0 ? j.profitSplit : 80;
+  const share = Math.max(net, 0) * split / 100;
+  const state = breached ? 'breached' : passed ? 'passed' : 'active';
+  return { net, bal, stage, wd, equity: bal + net - wd, profitPct, ddPct, dayPct, breached, passed, state, split, share, available: Math.max(share - wd, 0), count: es.length };
+}
+
 function renderJC(j) {
-  const count = allEntries.filter(e => e.journal_id === j.id).length;
-  return `<div class="jc" onclick="openJournal('${j.id}')">
+  const s = jStats(j);
+  const stage = j.stage || 'phase1';
+  const stBadge = s.state === 'breached' ? '<span class="stage-badge st-breached">BREACHED</span>'
+    : s.state === 'passed' ? '<span class="stage-badge st-passed">✔ PASSED</span>' : '';
+  const prog = stage !== 'master' && j.targetPct > 0 && s.bal > 0
+    ? `<div class="jmini"><div style="width:${Math.min(Math.max(s.profitPct / j.targetPct * 100, 0), 100)}%;background:${s.passed ? '#22c55e' : 'var(--accent)'};"></div></div>` : '';
+  const wdTxt = stage === 'master' && s.wd > 0 ? ` · 💸 $${s.wd.toFixed(0)} withdrawn` : '';
+  const pnlTxt = s.bal ? ` · ${s.net >= 0 ? '+' : '-'}$${Math.abs(s.net).toFixed(2)} (${s.profitPct.toFixed(1)}%)` : '';
+  return `<div class="jc ${s.state} ${stage === 'master' ? 'master' : ''} ${j.archived ? 'archived' : ''}" onclick="openJournal('${esc(j.id)}')">
     <div class="jdot" style="background:${j.color}22;border:2px solid ${j.color}55;">${jEmoji(j.color)}</div>
     <div class="jinfo">
-      <div class="jname">${esc(j.name)}</div>
-      <div class="jcount">${count} entries · ${esc(j.description || 'No description')}</div>
+      <div class="jname">${esc(j.name)} <span class="stage-badge ${stage === 'master' ? 'st-master' : ''}">${STAGE_LABEL[stage]}</span>${stBadge}</div>
+      <div class="jcount">${s.count} entries${pnlTxt}${wdTxt}</div>
+      ${prog}
     </div>
     <button class="icon-btn" onclick="event.stopPropagation();openEditJournal('${esc(j.id)}')" title="Edit Journal">✏️</button>
     <button class="icon-btn" onclick="event.stopPropagation();deleteJournal('${esc(j.id)}')" title="Delete Journal">🗑️</button>
     <div style="color:${j.color};font-size:22px;font-weight:700;">›</div>
   </div>`;
+}
+
+function renderJPanel(j) {
+  const s = jStats(j);
+  const stage = j.stage || 'phase1';
+  const fm = v => (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
+  const col = v => v >= 0 ? 'var(--win)' : 'var(--loss)';
+  const cell = (l, v, c) => `<div><div class="l">${l}</div><div class="v" ${c ? `style="color:${c}"` : ''}>${v}</div></div>`;
+  let banner = '';
+  if (j.archived) banner = `<div style="font-weight:800;color:var(--muted);margin-bottom:6px;">📦 Archived${j.archiveReason ? ' · ' + esc(j.archiveReason) : ''}</div>`;
+  else if (s.breached) banner = `<div style="font-weight:800;color:var(--loss);margin-bottom:6px;">⚠️ Account breached (loss limit reached) — archive this account.</div>`;
+  else if (s.passed) banner = `<div style="font-weight:800;color:#16a34a;margin-bottom:6px;">🎉 ${STAGE_LABEL[stage]} target reached! Move to the next stage.</div>`;
+
+  const grid = [
+    cell('STAGE', STAGE_LABEL[stage]),
+    s.bal ? cell('ACCOUNT SIZE', fm(s.bal)) : '',
+    cell('NET P&L', (s.net >= 0 ? '+' : '-') + fm(Math.abs(s.net)).replace('-', ''), col(s.net)),
+    s.bal ? cell('PROFIT %', s.profitPct.toFixed(2) + '%' + (j.targetPct ? ` / ${j.targetPct}%` : ''), col(s.profitPct)) : '',
+    s.bal ? cell('EQUITY', fm(s.equity)) : '',
+    s.bal && j.maxLossPct ? cell('MAX DD', s.ddPct.toFixed(2) + '% / ' + j.maxLossPct + '%', s.ddPct >= j.maxLossPct ? 'var(--loss)' : '') : '',
+    s.bal && j.dailyLossPct ? cell('WORST DAY', s.dayPct.toFixed(2) + '% / ' + j.dailyLossPct + '%', s.dayPct >= j.dailyLossPct ? 'var(--loss)' : '') : ''
+  ].join('');
+
+  let master = '';
+  if (stage === 'master') {
+    const list = (j.withdrawals || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    master = `<div class="div" style="margin:12px 0;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="fl" style="margin:0;">💸 WITHDRAWALS (split ${s.split}%)</div>
+        <button class="btn bp btn-sm" onclick="openWithdraw('${esc(j.id)}')">+ Withdraw</button>
+      </div>
+      <div class="jgrid">
+        ${cell('PROFIT SHARE', fm(s.share), 'var(--win)')}
+        ${cell('WITHDRAWN', fm(s.wd), '#f59e0b')}
+        ${cell('AVAILABLE', fm(s.available), s.available > 0 ? 'var(--win)' : '')}
+      </div>
+      ${list.length === 0 ? '<div style="font-size:12px;color:var(--muted);">No withdrawals yet.</div>' : list.map(w => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);font-size:13px;">
+          <span style="color:var(--muted);">${esc(w.date || '')} ${w.note ? '· ' + esc(w.note) : ''}</span>
+          <span style="font-weight:800;font-family:var(--font-mono);">-$${(parseFloat(w.amount) || 0).toFixed(2)}
+            <button class="icon-btn" style="width:28px;height:28px;font-size:12px;margin-left:6px;" onclick="deleteWithdrawal('${esc(j.id)}','${esc(w.id)}')">✕</button></span>
+        </div>`).join('')}`;
+  }
+
+  const actions = [];
+  if (!j.archived && s.passed && stage !== 'master') actions.push(`<button class="btn bp btn-sm" onclick="advanceStage('${esc(j.id)}')">➡️ Move to ${stage === 'phase1' ? 'Phase 2' : 'Master'}</button>`);
+  if (!j.archived) actions.push(`<button class="btn bs btn-sm" onclick="archiveJournal('${esc(j.id)}', true)">📦 Archive</button>`);
+  else actions.push(`<button class="btn bs btn-sm" onclick="archiveJournal('${esc(j.id)}', false)">♻️ Unarchive</button>`);
+
+  return `<div class="jpanel ${s.state}">${banner}<div class="jgrid">${grid}</div>${master}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${actions.join('')}</div></div>`;
+}
+
+function archiveJournal(jid, flag) {
+  const j = allJournals.find(x => x.id === jid);
+  if (!j) return;
+  if (flag) {
+    const s = jStats(j);
+    if (!confirm(`Archive "${j.name}"?`)) return;
+    j.archived = true;
+    j.archiveReason = s.breached ? 'Breached' : s.passed ? 'Passed' : (j.archiveReason || '');
+  } else {
+    j.archived = false;
+    delete j.archiveReason;
+  }
+  saveToStorage();
+  toast(flag ? '📦 Journal archived' : '♻️ Journal restored');
+  if (currentScreenId === 'journalScreen') renderJEntries();
+  if (currentTab === 'journals') renderJournals(g('tabContent'));
+}
+
+function advanceStage(jid) {
+  const j = allJournals.find(x => x.id === jid);
+  if (!j) return;
+  const next = j.stage === 'phase2' ? 'master' : 'phase2';
+  if (!confirm(`Create a new ${STAGE_LABEL[next]} journal and archive "${j.name}" as Passed?`)) return;
+  j.archived = true;
+  j.archiveReason = 'Passed';
+  const nj = { ...j, id: 'j-' + Date.now(), name: j.name.replace(/\s*[-–]\s*(Phase [12]|Master)$/i, '') + ' – ' + (next === 'master' ? 'Master' : 'Phase 2'),
+    stage: next, archived: false, withdrawals: [], breached: false };
+  delete nj.archiveReason;
+  if (next === 'master') nj.targetPct = 0;
+  allJournals.push(nj);
+  saveToStorage();
+  toast('🎉 Moved to ' + STAGE_LABEL[next]);
+  goBack();
+  if (currentTab === 'journals') renderJournals(g('tabContent'));
+}
+
+function openWithdraw(jid) {
+  window._wdJournal = jid;
+  g('wdAmount').value = '';
+  g('wdNote').value = '';
+  g('wdDate').value = localDate();
+  openModal('withdrawModal');
+}
+
+function saveWithdrawal() {
+  const j = allJournals.find(x => x.id === window._wdJournal);
+  const amt = parseFloat(g('wdAmount').value);
+  if (!j || !(amt > 0)) return toast('⚠️ Enter a valid amount');
+  (j.withdrawals = j.withdrawals || []).push({ id: 'w-' + Date.now(), amount: amt, date: g('wdDate').value || localDate(), note: g('wdNote').value.trim() });
+  saveToStorage();
+  closeModal('withdrawModal');
+  toast('💸 Withdrawal saved');
+  if (currentScreenId === 'journalScreen') renderJEntries();
+}
+
+function deleteWithdrawal(jid, wid) {
+  const j = allJournals.find(x => x.id === jid);
+  if (!j || !confirm('Delete this withdrawal?')) return;
+  j.withdrawals = (j.withdrawals || []).filter(w => w.id !== wid);
+  saveToStorage();
+  renderJEntries();
 }
 
 function deleteJournal(jid) {
@@ -2830,9 +3028,10 @@ function renderJEntries() {
   else if (activeFilter === 'buy') filtered = filtered.filter(e => e.direction?.toLowerCase() === 'buy');
   else if (activeFilter === 'sell') filtered = filtered.filter(e => e.direction?.toLowerCase() === 'sell');
 
-  body.innerHTML = filtered.length === 0
+  const panel = currentJournal ? renderJPanel(currentJournal) : '';
+  body.innerHTML = panel + (filtered.length === 0
     ? `<div class="es"><div class="ei">📝</div><h3>No trades in this journal</h3><p>Tap ＋ at the top to add a trade!</p></div>`
-    : filtered.map(e => renderEC(e, true)).join('');
+    : filtered.map(e => renderEC(e, true)).join(''));
 }
 
 function filterE(type) {
@@ -2865,10 +3064,17 @@ function renderEC(e, clickable = false) {
 
 let editingJournalId = null;
 
+function toggleSplit() {
+  g('newJSplitWrap').style.display = g('newJStage').value === 'master' ? '' : 'none';
+}
+
 function openNewJournal() {
   editingJournalId = null;
   ['newJName','newJDesc','newJBalance','newJTarget','newJDaily','newJMax'].forEach(id => g(id).value = '');
   g('jModalTitle').textContent = 'Create New Journal';
+  g('newJStage').value = 'phase1';
+  g('newJSplit').value = 80;
+  toggleSplit();
   g('jModalSave').textContent = 'Create Journal';
   selectedColor = '#6366f1';
   document.querySelectorAll('#colorPicker .color-circle').forEach(c => c.classList.toggle('sel', c.dataset.c === selectedColor));
@@ -2885,7 +3091,9 @@ function openEditJournal(jid) {
   g('newJTarget').value = j.targetPct || '';
   g('newJDaily').value = j.dailyLossPct || '';
   g('newJMax').value = j.maxLossPct || '';
-  g('jModalTitle').textContent = 'Edit Journal';
+  g('newJStage').value = j.stage || 'phase1';
+  g('newJSplit').value = j.profitSplit || 80;
+  toggleSplit();
   g('jModalSave').textContent = 'Save Changes';
   selectedColor = j.color || '#6366f1';
   document.querySelectorAll('#colorPicker .color-circle').forEach(c => c.classList.toggle('sel', c.dataset.c === selectedColor));
@@ -2903,7 +3111,9 @@ function createJournal() {
     balance: num('newJBalance'),
     targetPct: num('newJTarget'),
     dailyLossPct: num('newJDaily'),
-    maxLossPct: num('newJMax')
+    maxLossPct: num('newJMax'),
+    stage: g('newJStage').value,
+    profitSplit: num('newJSplit') || 80
   };
   const existing = editingJournalId && allJournals.find(x => x.id === editingJournalId);
   if (existing) {
