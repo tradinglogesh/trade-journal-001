@@ -2303,17 +2303,17 @@ function renderAnalysis(el) {
       ${kpi('PROFIT FACTOR', pf)}
       ${kpi('EXPECTANCY', fm(expectancy), cls(expectancy))}
       ${kpi('AVG WIN', '+$' + avgWin.toFixed(2), 'var(--win)')}
-      ${kpi('AVG LOSS', '-$' + avgLoss.toFixed(2), 'var(--loss)')}
+      ${kpi('AVG LOSS', avgLoss > 0 ? '-$' + avgLoss.toFixed(2) : '$0.00', avgLoss > 0 ? 'var(--loss)' : 'var(--muted)')}
       ${kpi('AVG RR', avgRR)}
       ${kpi('TOTAL TRADES', total)}
       ${kpi('BEST TRADE', fm(best), 'var(--win)')}
-      ${kpi('WORST TRADE', fm(worst), 'var(--loss)')}
-      ${kpi('MAX DRAWDOWN', '-$' + maxDD.toFixed(2) + (bal ? ` (${(maxDD / bal * 100).toFixed(1)}%)` : ''), 'var(--loss)')}
+      ${kpi('WORST TRADE', fm(worst), worst < 0 ? 'var(--loss)' : 'var(--win)')}
+      ${kpi('MAX DRAWDOWN', (maxDD > 0 ? '-$' : '$') + maxDD.toFixed(2) + (bal && maxDD > 0 ? ` (${(maxDD / bal * 100).toFixed(1)}%)` : ''), maxDD > 0 ? 'var(--loss)' : 'var(--muted)')}
       ${kpi('TRADING DAYS', days.length)}
       ${kpi('WIN STREAK', maxW)}
       ${kpi('LOSS STREAK', maxL)}
       ${kpi('BEST DAY', fm(bestDay), 'var(--win)')}
-      ${kpi('WORST DAY', fm(worstDayAll), 'var(--loss)')}
+      ${kpi('WORST DAY', fm(worstDayAll), worstDayAll < 0 ? 'var(--loss)' : 'var(--win)')}
       ${kpi('CONSISTENCY (best day / profit)', consistency)}
       ${kpi('TRADES / DAY', perDay)}
       ${wdAll > 0 ? kpi('💸 WITHDRAWN', '$' + wdAll.toFixed(2), '#f59e0b') : ''}
