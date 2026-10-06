@@ -1001,8 +1001,15 @@ html, body {
           </select>
         </div>
         <div class="fg">
-          <label class="fl">Net P&L ($)</label>
-          <input class="fi" id="entryPnl" type="number" step="any" placeholder="e.g. 550 or -63"/>
+          <label class="fl">P&L before commission ($)</label>
+          <input class="fi" id="entryPnl" oninput="updateNetHint()" type="number" step="any" placeholder="e.g. 550 or -63"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Commission / Fees ($)</label>
+          <input class="fi" id="entryComm" oninput="updateNetHint()" type="number" step="any" min="0" placeholder="e.g. 7 (optional)"/>
+        </div>
+        <div class="fg" style="grid-column:1/-1;margin-top:-6px;">
+          <div id="entryNetHint" style="font-size:12px;font-weight:700;color:var(--muted);"></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -2272,6 +2279,7 @@ function renderAnalysis(el) {
   const consistency = net > 0 && bestDay > 0 ? (bestDay / net * 100).toFixed(0) + '%' : '—';
   const fmN = (v, c) => v === null ? '<span style="color:var(--muted)">None</span>' : fm(v);
   const perDay = days.length ? (total / days.length).toFixed(1) : '—';
+  const commAll = entries.reduce((a, x) => a + Math.abs(parseFloat(x.e.commission) || 0), 0);
   const wdAll = (selJid ? [jr] : allJournals).reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0);
   const monthly = {};
   entries.forEach(x => { const k = x.date.slice(0, 7); if (!k) return; const o = monthly[k] || (monthly[k] = { k, n: 0, w: 0, l: 0, pnl: 0 }); o.n++; o.pnl += x.pnl; if (x.res === 'win') o.w++; if (x.res === 'loss') o.l++; });
@@ -2319,6 +2327,7 @@ function renderAnalysis(el) {
       ${kpi('WORST LOSING DAY', fmN(worstDayAll), 'var(--loss)')}
       ${kpi('CONSISTENCY (best day / profit)', consistency)}
       ${kpi('TRADES / DAY', perDay)}
+      ${commAll > 0 ? kpi('🧾 COMMISSION PAID', '-$' + commAll.toFixed(2), 'var(--loss)') : ''}
       ${wdAll > 0 ? kpi('💸 WITHDRAWN', '$' + wdAll.toFixed(2), '#f59e0b') : ''}
     </div>
 
@@ -2745,6 +2754,8 @@ function openAddEntry() {
   g('entryDirection').value = 'Buy';
   g('entryResult').value = 'Win';
   g('entryPnl').value = '';
+  g('entryComm').value = '';
+  updateNetHint();
   g('entryTimeframe').value = 'M15';
   g('entrySession').value = 'New York';
   g('entryDate').value = localDate();
@@ -2777,7 +2788,9 @@ function openEditEntry() {
   g('entryPair').value = e.pair || '';
   g('entryDirection').value = e.direction || 'Buy';
   g('entryResult').value = e.result || 'Win';
-  g('entryPnl').value = e.pnl || '';
+  g('entryPnl').value = (e.gross !== undefined && e.gross !== null) ? e.gross : (e.pnl || '');
+  g('entryComm').value = e.commission || '';
+  updateNetHint();
   g('entryTimeframe').value = e.timeframe || 'M15';
   g('entrySession').value = e.session || 'New York';
   g('entryDate').value = e.entry_date || '';
@@ -2861,12 +2874,20 @@ function updateSlotPreview(slotIdx) {
   }
 }
 
+function updateNetHint() {
+  const gr = parseFloat(g('entryPnl').value) || 0, cm = Math.abs(parseFloat(g('entryComm').value) || 0);
+  const n = gr - cm;
+  g('entryNetHint').innerHTML = cm ? `Net P&L after commission: <span style="color:${n >= 0 ? 'var(--win)' : 'var(--loss)'}">${n < 0 ? '-' : '+'}$${Math.abs(n).toFixed(2)}</span>` : '';
+}
+
 function saveEntry() {
   const pair = g('entryPair').value.trim();
   if (!pair) return toast('⚠️ Please enter a pair/instrument');
 
   const jid = g('entryJournalId').value || allJournals[0]?.id;
-  const pnlVal = parseFloat(g('entryPnl').value) || 0;
+  const grossVal = parseFloat(g('entryPnl').value) || 0;
+  const commVal = Math.abs(parseFloat(g('entryComm').value) || 0);
+  const pnlVal = Math.round((grossVal - commVal) * 100) / 100;
   const validCharts = currentSlotImages.filter(url => Boolean(url && url.trim()));
 
   const entryData = {
@@ -2876,6 +2897,8 @@ function saveEntry() {
     direction: g('entryDirection').value,
     result: g('entryResult').value,
     pnl: pnlVal,
+    gross: grossVal,
+    commission: commVal,
     timeframe: g('entryTimeframe').value,
     session: g('entrySession').value,
     entry_date: g('entryDate').value || localDate(),
