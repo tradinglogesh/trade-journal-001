@@ -905,6 +905,7 @@ html, body {
     <div class="topbar-title" id="jScreenTitle">Journal</div>
     <button class="icon-btn" onclick="exportJournalExcel()" title="Export Excel">📊</button>
     <button class="icon-btn" onclick="openAddEntry()" title="New Entry">＋</button>
+    <button class="icon-btn" onclick="openEditJournal(currentJournal && currentJournal.id)" title="Edit Journal">✏️</button>
     <button class="icon-btn" onclick="deleteJournal(currentJournal && currentJournal.id)" title="Delete Journal">🗑️</button>
   </div>
   <div class="ftabs" id="jFilterTabs">
@@ -1105,7 +1106,7 @@ html, body {
 <div class="mo" id="addJournalModal">
   <div class="ms">
     <div class="mhd">
-      <div class="mt">Create New Journal</div>
+      <div class="mt" id="jModalTitle">Create New Journal</div>
       <button class="icon-btn" onclick="closeModal('addJournalModal')">✕</button>
     </div>
     <div class="mb">
@@ -1116,6 +1117,15 @@ html, body {
       <div class="fg">
         <label class="fl">Description</label>
         <input class="fi" id="newJDesc" placeholder="Brief rules or purpose..."/>
+      </div>
+      <div class="fg">
+        <label class="fl">Account Size ($) - optional</label>
+        <input class="fi" id="newJBalance" type="number" min="0" step="any" placeholder="e.g. 5000"/>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <div class="fg" style="flex:1"><label class="fl">Profit Target %</label><input class="fi" id="newJTarget" type="number" min="0" step="any" placeholder="8"/></div>
+        <div class="fg" style="flex:1"><label class="fl">Max Daily Loss %</label><input class="fi" id="newJDaily" type="number" min="0" step="any" placeholder="5"/></div>
+        <div class="fg" style="flex:1"><label class="fl">Max Total Loss %</label><input class="fi" id="newJMax" type="number" min="0" step="any" placeholder="10"/></div>
       </div>
       <div class="fg">
         <label class="fl">Color Theme</label>
@@ -1133,7 +1143,7 @@ html, body {
     </div>
     <div class="ma">
       <button class="btn bs" onclick="closeModal('addJournalModal')">Cancel</button>
-      <button class="btn bp" style="flex:2" onclick="createJournal()">Create Journal</button>
+      <button class="btn bp" style="flex:2" id="jModalSave" onclick="createJournal()">Create Journal</button>
     </div>
   </div>
 </div>
@@ -1779,7 +1789,7 @@ function renderHome(el) {
     <div class="hm-journals">
       <div class="sh" style="margin-top:10px;">
         <span class="st">My Journals (${allJournals.length})</span>
-        <button onclick="openModal('addJournalModal')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">+ New</button>
+        <button onclick="openNewJournal()" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">+ New</button>
       </div>
       ${allJournals.slice(0, 3).map(j => renderJC(j)).join('')}
     </div>
@@ -1962,6 +1972,182 @@ function exportFilteredExcel() {
 // ANALYSIS TAB
 // ============================================================
 function renderAnalysis(el) {
+  const selJid = window._analysisJournalId || '';
+  const jr = allJournals.find(j => j.id === selJid);
+  const entries = allEntries
+    .filter(e => !selJid || e.journal_id === selJid)
+    .map((e, i) => ({ e, i, pnl: parseFloat(e.pnl) || 0, res: (e.result || '').toLowerCase(), date: e.entry_date || '' }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.i - b.i);
+
+  const total = entries.length;
+  const wins = entries.filter(x => x.res === 'win');
+  const losses = entries.filter(x => x.res === 'loss');
+  const be = total - wins.length - losses.length;
+  const grossWin = entries.filter(x => x.pnl > 0).reduce((a, x) => a + x.pnl, 0);
+  const grossLoss = Math.abs(entries.filter(x => x.pnl < 0).reduce((a, x) => a + x.pnl, 0));
+  const net = grossWin - grossLoss;
+  const winRate = total ? Math.round(wins.length / total * 100) : 0;
+  const avgWin = wins.length ? wins.reduce((a, x) => a + x.pnl, 0) / wins.length : 0;
+  const avgLoss = losses.length ? Math.abs(losses.reduce((a, x) => a + x.pnl, 0) / losses.length) : 0;
+  const pf = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : (grossWin > 0 ? '∞' : '0.00');
+  const expectancy = total ? net / total : 0;
+  const rrs = entries.map(x => parseFloat(x.e.rr_ratio)).filter(v => v > 0);
+  const avgRR = rrs.length ? (rrs.reduce((a, v) => a + v, 0) / rrs.length).toFixed(2) : '—';
+  const best = total ? Math.max(...entries.map(x => x.pnl)) : 0;
+  const worst = total ? Math.min(...entries.map(x => x.pnl)) : 0;
+
+  const byDay = {};
+  entries.forEach(x => { byDay[x.date] = (byDay[x.date] || 0) + x.pnl; });
+  const days = Object.keys(byDay).sort();
+
+  let curW = 0, curL = 0, maxW = 0, maxL = 0;
+  entries.forEach(x => {
+    if (x.res === 'win') { curW++; curL = 0; } else if (x.res === 'loss') { curL++; curW = 0; } else { curW = 0; curL = 0; }
+    maxW = Math.max(maxW, curW); maxL = Math.max(maxL, curL);
+  });
+
+  const bal = jr && jr.balance > 0 ? jr.balance : 0;
+  let eq = bal, peak = bal, maxDD = 0;
+  const curve = [bal];
+  entries.forEach(x => { eq += x.pnl; curve.push(eq); peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); });
+  const worstDay = days.length ? Math.min(...days.map(d => byDay[d]), 0) : 0;
+
+  const fm = v => (v < 0 ? '-$' : '+$') + Math.abs(v).toFixed(2);
+  const cls = v => v >= 0 ? 'var(--win)' : 'var(--loss)';
+  const kpi = (label, val, color) => `<div class="card" style="padding:16px;margin:0;">
+      <div class="fl" style="margin-bottom:6px;">${label}</div>
+      <div style="font-size:20px;font-weight:800;font-family:var(--font-mono);${color ? 'color:' + color : ''}">${val}</div></div>`;
+  const meter = (label, pct, limit, danger) => {
+    const w = limit > 0 ? Math.min(Math.max(pct / limit * 100, 0), 100) : 0;
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px;">
+        <span>${label}</span><span style="color:var(--muted);">${pct.toFixed(2)}% / ${limit}%</span></div>
+      <div class="pb" style="height:10px;"><div class="pf" style="width:${w}%;background:${danger ? (w > 80 ? 'var(--loss)' : w > 50 ? 'var(--be)' : 'var(--win)') : 'var(--accent)'};"></div></div></div>`;
+  };
+
+  let challenge = '';
+  if (jr && bal > 0 && (jr.targetPct || jr.dailyLossPct || jr.maxLossPct)) {
+    challenge = `<div class="card" style="margin-bottom:20px;padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <div class="fl" style="margin:0;">🎯 ACCOUNT / CHALLENGE PROGRESS</div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);">Balance $${bal.toFixed(2)} → Equity <span style="color:${cls(net)}">$${eq.toFixed(2)}</span></div>
+      </div>
+      ${jr.targetPct ? meter('Profit Target', Math.max(net / bal * 100, 0), jr.targetPct, false) : ''}
+      ${jr.dailyLossPct ? meter('Worst Daily Loss', Math.abs(worstDay) / bal * 100, jr.dailyLossPct, true) : ''}
+      ${jr.maxLossPct ? meter('Max Drawdown', maxDD / bal * 100, jr.maxLossPct, true) : ''}
+    </div>`;
+  }
+
+  // equity curve
+  const W = 600, H = 180, P = 8;
+  const mn = Math.min(...curve), mx = Math.max(...curve);
+  const span = mx - mn || 1;
+  const pts = curve.map((v, i) => [P + (curve.length > 1 ? i / (curve.length - 1) : 0) * (W - 2 * P), H - P - (v - mn) / span * (H - 2 * P)]);
+  const line = pts.map(p => p.join(',')).join(' ');
+  const curveSvg = total === 0 ? `<div style="color:var(--muted);text-align:center;padding:30px;">No trades logged yet</div>` : `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:180px;">
+      <polygon points="${P},${H - P} ${line} ${pts[pts.length - 1][0]},${H - P}" fill="${net >= 0 ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)'}"/>
+      <polyline points="${line}" fill="none" stroke="${net >= 0 ? '#22c55e' : '#ef4444'}" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:700;"><span>Start ${bal ? '$' + bal.toFixed(0) : '$0'}</span><span>Now ${bal ? '$' + eq.toFixed(2) : fm(net)}</span></div>`;
+
+  // grouped breakdowns
+  const group = keyFn => {
+    const m = {};
+    entries.forEach(x => {
+      const k = keyFn(x); if (!k) return;
+      const o = m[k] || (m[k] = { k, n: 0, w: 0, l: 0, pnl: 0 });
+      o.n++; o.pnl += x.pnl; if (x.res === 'win') o.w++; if (x.res === 'loss') o.l++;
+    });
+    return Object.values(m);
+  };
+  const dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dow = dowNames.map((n, i) => {
+    const g2 = group(x => { const d = new Date(x.date + 'T00:00:00'); return isNaN(d) ? '' : String(d.getDay()); }).find(o => o.k === String(i));
+    return { k: n, n: g2 ? g2.n : 0, pnl: g2 ? g2.pnl : 0 };
+  });
+  const dowMax = Math.max(...dow.map(d => Math.abs(d.pnl)), 1);
+  const dowHtml = `<div style="display:flex;gap:8px;align-items:center;height:150px;">${dow.map(d => {
+    const h = Math.abs(d.pnl) / dowMax * 55;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;">
+      <div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center;">${d.pnl > 0 ? `<div style="width:70%;height:${h}%;background:var(--win);border-radius:6px 6px 0 0;"></div>` : ''}</div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);padding:3px 0;">${d.n ? d.n + 't' : ''}</div>
+      <div style="flex:1;display:flex;align-items:flex-start;width:100%;justify-content:center;">${d.pnl < 0 ? `<div style="width:70%;height:${h}%;background:var(--loss);border-radius:0 0 6px 6px;"></div>` : ''}</div>
+      <div style="font-size:11px;font-weight:700;">${d.k}</div></div>`;
+  }).join('')}</div>`;
+
+  const table = (rows) => rows.length === 0 ? `<div style="color:var(--muted);text-align:center;padding:16px;">No data</div>` :
+    rows.sort((a, b) => b.pnl - a.pnl).map(o => {
+      const wr = o.n ? Math.round(o.w / o.n * 100) : 0;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="font-weight:800;min-width:80px;">${esc(o.k)}</div>
+        <div style="flex:1;"><div class="pb" style="height:8px;"><div class="pf" style="width:${wr}%;background:${wr >= 50 ? 'var(--win)' : 'var(--loss)'};"></div></div></div>
+        <div style="font-size:12px;color:var(--muted);min-width:90px;text-align:right;font-weight:600;">${wr}% · ${o.w}W ${o.l}L</div>
+        <div style="min-width:80px;text-align:right;font-weight:800;font-family:var(--font-mono);color:${cls(o.pnl)};">${fm(o.pnl)}</div></div>`;
+    }).join('');
+
+  const circ = 276, wf = total ? wins.length / total : 0, lf = total ? losses.length / total : 0, bf = total ? be / total : 0;
+  const card = (title, body) => `<div class="card" style="margin:0;padding:22px;"><div class="fl" style="margin-bottom:14px;">${title}</div>${body}</div>`;
+
+  el.innerHTML = `
+  <div style="padding:16px;">
+    <div class="fg" style="margin-bottom:20px;">
+      <label class="fl">SELECT JOURNAL</label>
+      <select class="fs" id="analysisJournalSelector" onchange="onAnalysisJournalChange(this.value)" style="font-weight:700;padding:14px;">
+        <option value="" ${!selJid ? 'selected' : ''}>📊 Overall (All Journals)</option>
+        ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === selJid ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
+      </select>
+      ${jr ? `<button class="btn bs btn-sm" style="margin-top:10px;" onclick="openEditJournal('${esc(jr.id)}')">✏️ Edit journal &amp; challenge rules</button>` : ''}
+    </div>
+
+    ${challenge}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">
+      ${kpi('NET P&L', fm(net), cls(net))}
+      ${kpi('WIN RATE', winRate + '%')}
+      ${kpi('PROFIT FACTOR', pf)}
+      ${kpi('EXPECTANCY', fm(expectancy), cls(expectancy))}
+      ${kpi('AVG WIN', '+$' + avgWin.toFixed(2), 'var(--win)')}
+      ${kpi('AVG LOSS', '-$' + avgLoss.toFixed(2), 'var(--loss)')}
+      ${kpi('AVG RR', avgRR)}
+      ${kpi('TOTAL TRADES', total)}
+      ${kpi('BEST TRADE', fm(best), 'var(--win)')}
+      ${kpi('WORST TRADE', fm(worst), 'var(--loss)')}
+      ${kpi('MAX DRAWDOWN', '-$' + maxDD.toFixed(2) + (bal ? ` (${(maxDD / bal * 100).toFixed(1)}%)` : ''), 'var(--loss)')}
+      ${kpi('TRADING DAYS', days.length)}
+      ${kpi('WIN STREAK', maxW)}
+      ${kpi('LOSS STREAK', maxL)}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div style="grid-column:1/-1;">${card('📈 EQUITY CURVE', curveSvg)}</div>
+      ${card('TRADE DISTRIBUTION', `
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div class="donut-wrap" style="width:130px;height:130px;">
+            <svg width="130" height="130" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="${wf * circ} ${circ}"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="${lf * circ} ${circ}" stroke-dashoffset="${-wf * circ}"/>
+              <circle cx="60" cy="60" r="44" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="${bf * circ} ${circ}" stroke-dashoffset="${-(wf + lf) * circ}"/>
+            </svg>
+            <div class="donut-center"><div style="font-size:22px;font-weight:800;font-family:var(--font-mono);">${winRate}%</div><div style="font-size:10px;color:var(--muted);font-weight:700;">Win Rate</div></div>
+          </div>
+          <div style="flex:1;min-width:140px;font-size:13px;font-weight:700;line-height:2;">
+            <div style="color:var(--win);">✅ Wins <span style="float:right;">${wins.length}</span></div>
+            <div style="color:var(--loss);">❌ Losses <span style="float:right;">${losses.length}</span></div>
+            <div style="color:var(--be);">⚡ Breakeven <span style="float:right;">${be}</span></div>
+          </div>
+        </div>`)}
+      ${card('📅 P&L BY WEEKDAY', dowHtml)}
+      ${card('💱 PAIR PERFORMANCE', table(group(x => x.e.pair)))}
+      ${card('🕒 SESSION PERFORMANCE', table(group(x => x.e.session)))}
+      ${card('↕️ BUY vs SELL', table(group(x => x.e.direction)))}
+      ${card('⏱️ TIMEFRAME', table(group(x => x.e.timeframe)))}
+    </div>
+  </div>`;
+}
+
+function _renderAnalysisLegacy(el) {
   const selJid = window._analysisJournalId || '';
   let entries = allEntries;
   if (selJid) entries = entries.filter(e => e.journal_id === selJid);
@@ -2592,7 +2778,7 @@ function renderJournals(el) {
   el.innerHTML = `<div style="padding:16px;">
     <div class="sh">
       <span class="st">Trading Journals</span>
-      <button class="btn bp btn-sm" onclick="openModal('addJournalModal')">+ New Journal</button>
+      <button class="btn bp btn-sm" onclick="openNewJournal()">+ New Journal</button>
     </div>
     ${allJournals.map(j => renderJC(j)).join('')}
   </div>`;
@@ -2606,6 +2792,7 @@ function renderJC(j) {
       <div class="jname">${esc(j.name)}</div>
       <div class="jcount">${count} entries · ${esc(j.description || 'No description')}</div>
     </div>
+    <button class="icon-btn" onclick="event.stopPropagation();openEditJournal('${esc(j.id)}')" title="Edit Journal">✏️</button>
     <button class="icon-btn" onclick="event.stopPropagation();deleteJournal('${esc(j.id)}')" title="Delete Journal">🗑️</button>
     <div style="color:${j.color};font-size:22px;font-weight:700;">›</div>
   </div>`;
@@ -2676,20 +2863,61 @@ function renderEC(e, clickable = false) {
   </div>`;
 }
 
+let editingJournalId = null;
+
+function openNewJournal() {
+  editingJournalId = null;
+  ['newJName','newJDesc','newJBalance','newJTarget','newJDaily','newJMax'].forEach(id => g(id).value = '');
+  g('jModalTitle').textContent = 'Create New Journal';
+  g('jModalSave').textContent = 'Create Journal';
+  selectedColor = '#6366f1';
+  document.querySelectorAll('#colorPicker .color-circle').forEach(c => c.classList.toggle('sel', c.dataset.c === selectedColor));
+  openModal('addJournalModal');
+}
+
+function openEditJournal(jid) {
+  const j = allJournals.find(x => x.id === jid);
+  if (!j) return;
+  editingJournalId = jid;
+  g('newJName').value = j.name || '';
+  g('newJDesc').value = j.description || '';
+  g('newJBalance').value = j.balance || '';
+  g('newJTarget').value = j.targetPct || '';
+  g('newJDaily').value = j.dailyLossPct || '';
+  g('newJMax').value = j.maxLossPct || '';
+  g('jModalTitle').textContent = 'Edit Journal';
+  g('jModalSave').textContent = 'Save Changes';
+  selectedColor = j.color || '#6366f1';
+  document.querySelectorAll('#colorPicker .color-circle').forEach(c => c.classList.toggle('sel', c.dataset.c === selectedColor));
+  openModal('addJournalModal');
+}
+
 function createJournal() {
   const name = g('newJName').value.trim();
   if (!name) return toast('⚠️ Please enter a journal name');
-
-  allJournals.push({
-    id: 'j-' + Date.now(),
+  const num = id => Math.max(parseFloat(g(id).value) || 0, 0);
+  const fields = {
     name,
     description: g('newJDesc').value.trim(),
-    color: selectedColor
-  });
+    color: selectedColor,
+    balance: num('newJBalance'),
+    targetPct: num('newJTarget'),
+    dailyLossPct: num('newJDaily'),
+    maxLossPct: num('newJMax')
+  };
+  const existing = editingJournalId && allJournals.find(x => x.id === editingJournalId);
+  if (existing) {
+    Object.assign(existing, fields);
+    if (currentJournal && currentJournal.id === existing.id) g('jScreenTitle').textContent = existing.name;
+  } else {
+    allJournals.push({ id: 'j-' + Date.now(), ...fields });
+  }
   saveToStorage();
   closeModal('addJournalModal');
-  toast('✅ Journal created');
-  renderJournals(g('tabContent'));
+  toast(existing ? '✅ Journal updated' : '✅ Journal created');
+  editingJournalId = null;
+  if (currentTab === 'journals') renderJournals(g('tabContent'));
+  else if (currentTab === 'analysis') renderAnalysis(g('tabContent'));
 }
 
 function pickColor(c, el) {
