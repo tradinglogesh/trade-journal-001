@@ -839,6 +839,8 @@ html, body {
     align-items: start;
   }
   .hm-header { grid-area: header; }
+  .hm-header { margin-bottom: 14px !important; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .hm-actions { flex-wrap: nowrap !important; }
   .hm-hero { grid-area: hero; }
   .hm-accounts { grid-area: accounts; }
   .hm-recent { grid-area: recent; }
@@ -1995,14 +1997,14 @@ function renderHome(el) {
         <div style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Hey ${esc(userProfile.name.split(' ')[0])} 👋</div>
         <div style="font-size:13px;color:var(--muted);margin-top:2px;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;">${isDark ? '☀️' : '🌙'}</button>
-        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive">☁️ Sync</button>
-        <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:190px;font-weight:700;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
+      <div class="hm-actions" style="display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;width:42px;height:42px;padding:0;">${isDark ? '☀️' : '🌙'}</button>
+        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive" style="height:42px;padding:0 16px;white-space:nowrap;">☁️ Sync</button>
+        <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:190px;max-width:260px;height:42px;font-weight:700;padding:0 14px;margin:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
           <option value="" ${!homeJournalId ? 'selected' : ''}>📊 All Journals</option>
           ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === homeJournalId ? 'selected' : ''}>${j.archived ? '📦 ' : ''}${esc(j.name)}</option>`).join('')}
         </select>
-        <button class="btn bp btn-sm" onclick="openAddEntry()" style="padding:10px 18px;">＋ New Trade</button>
+        <button class="btn bp btn-sm" onclick="openAddEntry()" style="height:42px;padding:0 18px;white-space:nowrap;">＋ New Trade</button>
       </div>
     </div>
 
