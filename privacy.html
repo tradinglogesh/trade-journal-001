@@ -14,22 +14,19 @@ h1{font-size:1.6rem}h2{font-size:1.15rem;margin-top:1.6rem}
 <p>Last updated: 6 October 2026</p>
 
 <h2>What the app does</h2>
-<p>Trade Journal is a personal trading journal that runs entirely in your browser. There is no app server and no database operated by the developer.</p>
+<p>Trade Journal is a personal trading journal. Your data is stored in your browser and synced to your own account in the cloud (Supabase).</p>
 
-<h2>Information we access</h2>
+<h2>Information we store</h2>
 <ul>
-<li><strong>Google profile (name, email, picture):</strong> used only to show who is signed in and to keep each account's data separate.</li>
-<li><strong>Google Drive (drive.file scope):</strong> the app can only see and modify the single backup file it creates (<code>trade-journal-backup.json</code>). It cannot see any other file in your Drive.</li>
+<li><strong>Account:</strong> your email address and name, used to sign you in and keep each account's data separate.</li>
+<li><strong>Journal data:</strong> trades, notes, plans and chart images. Row Level Security ensures only you can read or change your records.</li>
 </ul>
 
-<h2>How your data is used and stored</h2>
-<p>Your journal data (trades, notes, plans, images) is stored in your browser's local storage and in the backup file in your own Google Drive, so it can sync across your devices. The developer cannot access your data and does not collect, sell, share, or analyse it.</p>
-
 <h2>Third parties</h2>
-<p>Data is sent only between your browser and Google (sign-in and Drive). No analytics or advertising services are used.</p>
+<p>Data is sent only between your browser and Supabase (authentication, database and storage). No Google services, analytics or advertising are used. Your data is never sold or shared.</p>
 
 <h2>Deleting your data</h2>
-<p>Sign out and clear the site data in your browser, delete <code>trade-journal-backup.json</code> from your Google Drive, and revoke access at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</p>
+<p>Download a JSON backup from Settings, then contact the address below to have your account and all its data deleted.</p>
 
 <h2>Contact</h2>
 <p>tradinglogesh@gmail.com</p>

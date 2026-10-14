@@ -14,25 +14,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- SheetJS (local copy) & Google Identity Services -->
+<!-- SheetJS (local copy) -->
 <script src="lib/xlsx.full.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 :root {
-  --bg: #f4f7fc;
+  --bg: #f1f5f9;
   --surface: #ffffff;
-  --surface2: #f8faff;
-  --surface3: #eef2ff;
+  --surface2: #f8fafc;
+  --surface3: #e8f0fe;
   --border: #e2e8f0;
-  --border-focus: #6366f1;
+  --border-focus: #2563eb;
   --text: #0f172a;
   --muted: #64748b;
   --muted2: #94a3b8;
-  --accent: #4f46e5;
-  --accent2: #6366f1;
-  --accent3: #818cf8;
-  --accent-light: #eef2ff;
+  --accent: #2563eb;
+  --accent2: #3b82f6;
+  --accent3: #93c5fd;
+  --accent-light: #e8f0fe;
   --win: #16a34a;
   --win-bg: rgba(22, 163, 74, 0.1);
   --win-border: rgba(22, 163, 74, 0.25);
@@ -51,19 +50,19 @@
 }
 
 [data-theme="dark"] {
-  --bg: #0a0f1e;
-  --surface: #111827;
-  --surface2: #1a2236;
-  --surface3: #222f45;
-  --border: #1e293b;
-  --border-focus: #818cf8;
+  --bg: #080d17;
+  --surface: #0f1724;
+  --surface2: #162033;
+  --surface3: #1d2b42;
+  --border: #1f2d44;
+  --border-focus: #60a5fa;
   --text: #f1f5f9;
-  --muted: #64748b;
-  --muted2: #94a3b8;
-  --accent: #6366f1;
-  --accent2: #818cf8;
-  --accent3: #a5b4fc;
-  --accent-light: rgba(99, 102, 241, 0.15);
+  --muted: #7b8aa3;
+  --muted2: #9aa8be;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --accent-light: rgba(59, 130, 246, 0.15);
   --win: #22c55e;
   --win-bg: rgba(34, 197, 94, 0.12);
   --win-border: rgba(34, 197, 94, 0.3);
@@ -196,8 +195,9 @@ html, body {
   padding: 20px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
 }
+.card:hover { border-color: var(--accent); }
 
 /* FORMS */
 .fg { margin-bottom: 16px; }
@@ -224,7 +224,7 @@ html, body {
 }
 .fi:focus, .fs:focus, .ft:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 .ft { resize: vertical; min-height: 80px; }
 .fs option { background: var(--surface); color: var(--text); }
@@ -245,8 +245,8 @@ html, body {
   font-family: var(--font);
 }
 .btn:active { transform: scale(.98); }
-.bp { background: var(--accent); color: #fff; }
-.bp:hover { background: #4338ca; }
+.bp { background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, .3); }
+.bp:hover { filter: brightness(1.08); box-shadow: 0 6px 18px rgba(37, 99, 235, .4); }
 .bs { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
 .bs:hover { background: var(--surface3); }
 .bd { background: var(--loss-bg); color: var(--loss); border: 1px solid var(--loss-border); }
@@ -266,7 +266,7 @@ html, body {
 .bwin { background: var(--win-bg); color: var(--win); border: 1px solid var(--win-border); }
 .bloss { background: var(--loss-bg); color: var(--loss); border: 1px solid var(--loss-border); }
 .bbe { background: var(--be-bg); color: var(--be); }
-.bbuy { background: rgba(99, 102, 241, 0.12); color: var(--accent); font-weight: 700; }
+.bbuy { background: rgba(59, 130, 246, 0.14); color: var(--accent); font-weight: 700; }
 .bsell { background: rgba(239, 68, 68, 0.12); color: var(--loss); font-weight: 700; }
 
 /* STATS */
@@ -291,7 +291,7 @@ html, body {
   position: absolute;
   inset: 0;
   border-radius: var(--r);
-  background: linear-gradient(135deg, rgba(99,102,241,.05), transparent);
+  background: linear-gradient(135deg, rgba(59,130,246,.08), transparent);
   pointer-events: none;
 }
 .sv { font-size: 28px; font-weight: 800; margin-bottom: 4px; font-family: var(--font-mono); }
@@ -318,7 +318,7 @@ html, body {
 .ec:hover {
   border-color: var(--accent2);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99,102,241,.08);
+  box-shadow: 0 8px 24px rgba(59,130,246,.12);
 }
 .ec:active { transform: scale(.99); }
 .eh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -372,7 +372,7 @@ html, body {
 .jc.master { border-color: #f59e0b; }
 .jc.archived { opacity: .75; }
 .jc-wrap { flex: 1; min-width: 0; }
-.stage-badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; letter-spacing: .3px; background: rgba(99,102,241,.15); color: var(--accent); }
+.stage-badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; letter-spacing: .3px; background: rgba(59,130,246,.15); color: var(--accent); }
 .stage-badge.st-passed { background: rgba(34,197,94,.2); color: #16a34a; }
 .stage-badge.st-breached { background: rgba(239,68,68,.2); color: #dc2626; }
 .stage-badge.st-master { background: rgba(245,158,11,.2); color: #d97706; }
@@ -694,7 +694,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.12), var(--bg) 70%);
+  background: radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.14), var(--bg) 70%);
 }
 .auth-box {
   width: 100%;
@@ -717,28 +717,15 @@ html, body {
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.3);
 }
-.google-btn {
-  width: 100%;
-  padding: 13px 18px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--rs);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  transition: all .15s;
-  font-family: var(--font);
+
+#authSignInView, #authSignUpView, #authLoadingView, #authForgotView, #authResetView {
+  display: none;
 }
-.google-btn:hover {
-  background: var(--surface2);
-  border-color: var(--accent2);
+
+#authSignInView.active, #authSignUpView.active, #authLoadingView.active, #authForgotView.active, #authResetView.active {
+  display: block;
 }
 
 /* DESKTOP SIDEBAR */
@@ -857,19 +844,79 @@ html, body {
     <h1 style="font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px;">Trade Journal</h1>
     <p style="font-size:13px;color:var(--muted);margin-bottom:24px;">Professional Trading Suite Pro Portal</p>
 
-    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Sign in with Google. Your trades load from and auto-save to your own Google Drive, so your latest data follows you on every device.</p>
+    <div id="authSignInView">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Sign in to access your trading journal. All data is securely stored in the cloud.</p>
+      
+      <div class="fg" style="margin-bottom:12px;">
+        <label class="fl">Email</label>
+        <input class="fi" id="signInEmail" type="email" placeholder="trader@example.com"/>
+      </div>
+      
+      <div class="fg" style="margin-bottom:20px;">
+        <label class="fl">Password</label>
+        <input class="fi" id="signInPassword" type="password" placeholder="••••••••"/>
+      </div>
 
-    <!-- GOOGLE LOGIN BUTTON -->
-    <button class="google-btn" onclick="handleGoogleLogin()">
-      <svg width="18" height="18" viewBox="0 0 24 24">
-        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-      </svg>
-      Sign in with Google
-    </button>
+      <button class="btn bp" onclick="AUTH.handleSignIn()" style="width:100%;margin-bottom:12px;">Sign In</button>
+      
+      <div style="text-align:center;margin-bottom:12px;"><a href="#" onclick="switchAuthView('forgot');return false;" style="font-size:12px;color:var(--muted);">Forgot password?</a></div>
+      <button class="btn" onclick="switchAuthView('signup')" style="width:100%;background:var(--surface2);border:1px solid var(--border);">
+        Create Account
+      </button>
+    </div>
 
+    <div id="authSignUpView">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Create a new account to get started with your trading journal.</p>
+      
+      <div class="fg" style="margin-bottom:12px;">
+        <label class="fl">Email</label>
+        <input class="fi" id="signUpEmail" type="email" placeholder="trader@example.com"/>
+      </div>
+      
+      <div class="fg" style="margin-bottom:12px;">
+        <label class="fl">Password</label>
+        <input class="fi" id="signUpPassword" type="password" placeholder="••••••••"/>
+      </div>
+
+      <div class="fg" style="margin-bottom:20px;">
+        <label class="fl">Confirm Password</label>
+        <input class="fi" id="signUpConfirm" type="password" placeholder="••••••••"/>
+      </div>
+
+      <button class="btn bp" onclick="AUTH.handleSignUp()" style="width:100%;margin-bottom:12px;">Create Account</button>
+      
+      <button class="btn" onclick="switchAuthView('signin')" style="width:100%;background:var(--surface2);border:1px solid var(--border);">
+        Sign In Instead
+      </button>
+    </div>
+
+    <div id="authForgotView">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Enter your email and we'll send a link to reset your password.</p>
+      <div class="fg" style="margin-bottom:20px;">
+        <label class="fl">Email</label>
+        <input class="fi" id="forgotEmail" type="email" placeholder="trader@example.com"/>
+      </div>
+      <button class="btn bp" onclick="handleForgotPassword()" style="width:100%;margin-bottom:12px;">Send Reset Link</button>
+      <button class="btn" onclick="switchAuthView('signin')" style="width:100%;background:var(--surface2);border:1px solid var(--border);">Back to Sign In</button>
+    </div>
+
+    <div id="authResetView">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;">Choose a new password (min 8 characters).</p>
+      <div class="fg" style="margin-bottom:12px;">
+        <label class="fl">New Password</label>
+        <input class="fi" id="resetPassword" type="password" placeholder="••••••••"/>
+      </div>
+      <div class="fg" style="margin-bottom:20px;">
+        <label class="fl">Confirm Password</label>
+        <input class="fi" id="resetConfirm" type="password" placeholder="••••••••"/>
+      </div>
+      <button class="btn bp" onclick="handleResetPassword()" style="width:100%;">Update Password</button>
+    </div>
+
+    <div id="authLoadingView" style="text-align:center;padding:20px;">
+      <div style="font-size:28px;margin-bottom:12px;">⏳</div>
+      <p style="font-size:12px;color:var(--muted);">Authenticating...</p>
+    </div>
   </div>
 </div>
 
@@ -1248,6 +1295,13 @@ html, body {
 <div class="toast" id="toast"></div>
 <div class="sync-chip" id="syncChip" onclick="syncChipClick()"></div>
 
+<script src="js/config.js"></script>
+<script src="js/supabase-auth.js"></script>
+<script src="js/sync-merge.js"></script>
+<script src="js/supabase-db.js"></script>
+<script src="js/supabase-storage.js"></script>
+<script src="js/backup.js"></script>
+
 <script>
 // ============================================================
 // STATE & LOCAL STORAGE PERSISTENCE
@@ -1260,14 +1314,11 @@ let userProfile = {
   name: 'Trader',
   handle: '@trader',
   email: '',
-  isLoggedIn: false,
-  driveConnected: false,
-  driveFolderId: null
+  isLoggedIn: false
 };
 
 let allJournals = [];
 let dataUpdatedAt = 0;
-let dataOwner = '';
 let lastDataSnap = '';
 let allEntries = [];
 let allTradingPlans = [];
@@ -1297,37 +1348,22 @@ const DEFAULT_PLANS = [
   { id: 'p-2', name: 'Risk Management Rule', description: 'Max 2 trades per day. If -2R is reached, close all charts.' }
 ];
 
-function initData() {
-  const userRaw = localStorage.getItem(USER_KEY);
-  if (userRaw) {
-    try { userProfile = { ...userProfile, ...JSON.parse(userRaw) }; } catch (e) {}
-  }
-  userProfile.driveConnected = false;
 
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      allJournals = parsed.journals || [...DEFAULT_JOURNALS];
-      allEntries = parsed.entries || [...DEFAULT_ENTRIES];
-      allTradingPlans = parsed.plans || [...DEFAULT_PLANS];
-      dataUpdatedAt = Number(parsed.updatedAt) || 0;
-      dataOwner = parsed.owner || userProfile.email || '';
-      lastDataSnap = JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans });
-      syncUserProfileChrome();
-      return;
-    } catch (e) {}
-  }
-
-  allJournals = [...DEFAULT_JOURNALS];
-  allEntries = [...DEFAULT_ENTRIES];
-  allTradingPlans = [...DEFAULT_PLANS];
-  saveToStorage(true);
-  syncUserProfileChrome();
+// Per-row edit stamps (_u) let sync settle true conflicts between devices
+const _itemSnap = {};
+function snapItems(stamp) {
+  [allJournals, allEntries, allTradingPlans].forEach((list, t) => list.forEach(d => {
+    if (!d || d.id == null) return;
+    const k = t + ':' + d.id;
+    const s = JSON.stringify(d, (key, v) => (key === '_u' ? undefined : v));
+    if (stamp && _itemSnap[k] !== s) d._u = Date.now();
+    _itemSnap[k] = s;
+  }));
 }
 
 function saveToStorage(skipSync) {
   try {
+    snapItems(!skipSync);
     const snap = JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans });
     const changed = snap !== lastDataSnap;
     if (changed && !skipSync) dataUpdatedAt = Date.now();
@@ -1336,8 +1372,7 @@ function saveToStorage(skipSync) {
       journals: allJournals,
       entries: allEntries,
       plans: allTradingPlans,
-      updatedAt: dataUpdatedAt,
-      owner: dataOwner
+      updatedAt: dataUpdatedAt
     }));
     localStorage.setItem(USER_KEY, JSON.stringify(userProfile));
     if (changed && !skipSync) scheduleSync();
@@ -1352,7 +1387,7 @@ function syncUserProfileChrome() {
   const nameEl = g('sideUserName');
   if (nameEl) nameEl.textContent = userProfile.name;
   const subEl = g('sideUserSub');
-  if (subEl) subEl.textContent = `${userProfile.isGoogleUser ? 'Google User' : 'Trader'} · ${userProfile.driveConnected ? 'Drive Connected' : 'Local'}`;
+  if (subEl) subEl.textContent = `${userProfile.email || 'Offline Mode'}`;
 }
 
 function g(id) { return document.getElementById(id); }
@@ -1361,7 +1396,15 @@ function esc(str) {
   return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 function safeUrl(u) {
-  return /^(https?:\/\/|data:image\/)/i.test(String(u || '').trim()) ? String(u).trim() : '';
+  return /^(https?:\/\/|data:image\/|sb:[\w\-./]+$)/i.test(String(u || '').trim()) ? String(u).trim() : '';
+}
+const IMG_PLACEHOLDER = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+function imgSrc(u) { return u.startsWith('sb:') ? IMG_PLACEHOLDER : u; }
+function hydrateStorageImages(root) {
+  (root || document).querySelectorAll('img[data-sb]').forEach(async el => {
+    const url = await STORE.resolve(el.dataset.sb);
+    if (url) el.src = url;
+  });
 }
 function localDate(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1378,6 +1421,9 @@ function jEmoji(color) { return '📘'; }
 
 // Validates restored data so ids/colors can't break out of HTML attributes
 function sanitizeBackup(d) {
+  if (d && d.data && typeof d.data === 'object') {
+    d = { journals: d.data.journals, entries: d.data.entries, plans: d.data.tradingPlans || d.data.plans };
+  }
   if (!d || !Array.isArray(d.journals) || !Array.isArray(d.entries)) throw new Error('Invalid backup file');
   const okId = v => /^[\w-]+$/.test(String(v));
   const journals = d.journals.filter(j => j && okId(j.id)).map(j => ({
@@ -1395,63 +1441,21 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// AUTH & LOGIN LOGIC
-// Set your Google OAuth "Web application" client ID here (authorize your GitHub Pages origin in Google Cloud Console).
-const GOOGLE_CLIENT_ID = '735262327898-n236erdrp7ctikulvtpuc7h9l7mslnj4.apps.googleusercontent.com';
+// AUTH & LOGIN LOGIC - Supabase based
 const CRED_KEY = 'Trade_cred_v3';
-const DRIVE_FILE_NAME = 'trade-journal-backup.json';
-let driveToken = null;
-
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function enterApp() {
-  userProfile.isLoggedIn = true;
-  saveToStorage();
-  syncUserProfileChrome();
-  g('authScreen').classList.add('hidden');
-  g('mainScreen').classList.remove('hidden');
-  currentScreenId = 'mainScreen';
-  switchTab('home');
-}
-
-let driveTokenExpiry = 0;
 let syncTimer = null;
 let syncBusy = false;
 let syncPending = false;
-let syncState = 'idle'; // idle | syncing | synced | offline | reconnect | error
+let syncState = 'idle'; // idle | syncing | synced | offline | error
 let lastSyncedAt = 0;
-
-function requestDriveToken(silent) {
-  return new Promise((resolve, reject) => {
-    if (!GOOGLE_CLIENT_ID) return reject(new Error('Google Client ID is not configured in index.html'));
-    if (!(window.google && google.accounts && google.accounts.oauth2)) return reject(new Error('Google library not loaded'));
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-      hint: userProfile.email || undefined,
-      callback: res => {
-        if (res.error) return reject(new Error(res.error));
-        driveToken = res.access_token;
-        driveTokenExpiry = Date.now() + (Number(res.expires_in) || 3600) * 1000 - 60000;
-        resolve(res.access_token);
-      },
-      error_callback: err => reject(new Error(err.type || 'Sign-in cancelled'))
-    });
-    client.requestAccessToken(silent ? { prompt: '' } : {});
-  });
-}
 
 function setSyncState(s) {
   syncState = s;
-  userProfile.driveConnected = !!driveToken && Date.now() < driveTokenExpiry;
   const chip = g('syncChip');
   if (!chip) return;
   const map = {
     idle: ['', ''], syncing: ['🔄 Syncing…', 'sync-busy'], synced: ['☁️ Synced', 'sync-ok'],
-    offline: ['📴 Offline – will sync', 'sync-warn'], reconnect: ['🔑 Tap to reconnect Google', 'sync-warn'],
+    offline: ['📴 Offline – will sync', 'sync-warn'],
     error: ['⚠️ Sync failed – tap to retry', 'sync-warn']
   };
   const [txt, cls] = map[s] || map.idle;
@@ -1462,241 +1466,82 @@ function setSyncState(s) {
 }
 
 function syncChipClick() {
-  if (syncState === 'reconnect' || syncState === 'error') reconnectAndSync(false);
-}
-
-// Gets a valid token; silently refreshes if expired. Returns false if user interaction is needed.
-async function getValidToken(allowPrompt) {
-  if (driveToken && Date.now() < driveTokenExpiry) return true;
-  try {
-    await requestDriveToken(!allowPrompt);
-    return true;
-  } catch (e) {
-    driveToken = null;
-    return false;
-  }
+  if (syncState === 'error') reconnectAndSync(false);
 }
 
 async function reconnectAndSync(silent) {
-  if (!(await getValidToken(!silent))) { setSyncState('reconnect'); return false; }
-  return await mergeWithDrive();
-}
-
-function remoteFileUrl(id) { return `https://www.googleapis.com/drive/v3/files/${id}?alt=media`; }
-
-async function driveUpload(id) {
-  const payload = { journals: allJournals, entries: allEntries, plans: allTradingPlans, updatedAt: dataUpdatedAt, owner: userProfile.email };
-  const boundary = 'tj_' + Date.now();
-  const body =
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })}\r\n` +
-    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(payload)}\r\n` +
-    `--${boundary}--`;
-  const url = id
-    ? `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=multipart`
-    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-  const r = await fetch(url, {
-    method: id ? 'PATCH' : 'POST',
-    headers: { Authorization: 'Bearer ' + driveToken, 'Content-Type': `multipart/related; boundary=${boundary}` },
-    body
-  });
-  if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
-  if (!r.ok) throw new Error(`Upload failed (${r.status})`);
-}
-
-// Compares Drive vs local by timestamp; newest wins. Never overwrites newer data with older.
-async function mergeWithDrive() {
-  if (syncBusy) { syncPending = true; return false; }
-  syncBusy = true;
+  if (!AUTH.isAuthenticated()) return false;
   setSyncState('syncing');
   try {
-    const id = await driveFindFile();
-    let remote = null;
-    if (id) {
-      const r = await fetch(remoteFileUrl(id), { headers: { Authorization: 'Bearer ' + driveToken } });
-      if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
-      if (!r.ok) throw new Error(`Download failed (${r.status})`);
-      const raw = await r.json();
-      remote = { ...sanitizeBackup(raw), updatedAt: Number(raw.updatedAt) || 0 };
-    }
-    if (remote && remote.updatedAt > dataUpdatedAt) {
-      allJournals = remote.journals;
-      allEntries = remote.entries;
-      allTradingPlans = remote.plans || allTradingPlans;
-      dataUpdatedAt = remote.updatedAt;
-      saveToStorage(true);
-      if (!allJournals.find(j => j.id === homeJournalId)) homeJournalId = '';
-      if (currentScreenId === 'mainScreen') switchTab(currentTab);
-    } else if (!remote || remote.updatedAt < dataUpdatedAt) {
-      await driveUpload(id);
-    }
-    lastSyncedAt = Date.now();
+    await DB.syncAll();
     setSyncState('synced');
+    lastSyncedAt = Date.now();
     return true;
   } catch (e) {
-    if (e.auth) setSyncState('reconnect');
-    else setSyncState(navigator.onLine ? 'error' : 'offline');
+    console.error('Sync error:', e);
+    setSyncState('error');
     return false;
-  } finally {
-    syncBusy = false;
-    if (syncPending) { syncPending = false; scheduleSync(); }
   }
 }
 
+
+
 function scheduleSync() {
-  if (!userProfile.isLoggedIn || !userProfile.isGoogleUser) return;
+  if (!AUTH.isAuthenticated()) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     if (!navigator.onLine) return setSyncState('offline');
-    if (!(await getValidToken(false))) return setSyncState('reconnect');
-    await mergeWithDrive();
+    if (!AUTH.isAuthenticated()) return;
+    try {
+      await DB.syncAll();
+      setSyncState('synced');
+      lastSyncedAt = Date.now();
+    } catch (e) {
+      console.error('Sync error:', e);
+      setSyncState('error');
+    }
   }, 2000);
 }
 
-async function handleGoogleLogin() {
-  try {
-    await requestDriveToken(false);
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + driveToken } });
-    if (!r.ok) throw new Error('Could not read Google profile');
-    const info = await r.json();
-    const email = (info.email || '').toLowerCase();
-    if (!email) throw new Error('No email returned by Google');
-    // Local data owned by a different account must never mix with this account
-    if (dataOwner && dataOwner !== email) {
-      allJournals = [...DEFAULT_JOURNALS]; allEntries = []; allTradingPlans = [...DEFAULT_PLANS];
-      dataUpdatedAt = 0; homeJournalId = '';
-      lastDataSnap = ''; saveToStorage(true);
-    }
-    dataOwner = email;
-    userProfile.name = info.name || email;
-    userProfile.email = email;
-    userProfile.handle = '@' + email.split('@')[0];
-    userProfile.isGoogleUser = true;
-    userProfile.driveConnected = true;
-    enterApp();
-    await mergeWithDrive();
-    toast(`👋 Welcome, ${userProfile.name}`);
-  } catch (e) {
-    driveToken = null;
-    toast('⚠️ Google sign-in failed: ' + e.message);
+// Online/offline event listeners
+window.addEventListener('online', () => { 
+  if (AUTH.isAuthenticated()) scheduleSync(); 
+});
+
+window.addEventListener('offline', () => { 
+  if (AUTH.isAuthenticated()) setSyncState('offline'); 
+});
+
+document.addEventListener('visibilitychange', () => { 
+  if (!document.hidden && AUTH.isAuthenticated()) scheduleSync(); 
+});
+
+async function syncNow() {
+  if (!AUTH.isAuthenticated()) { toast('⚠️ Not logged in'); return; }
+  const ok = await DB.syncAll();
+  toast(ok ? '✅ Synced with cloud' : '⚠️ Sync failed');
+}
+
+async function restoreFromCloud() {
+  if (!AUTH.isAuthenticated()) {
+    toast('⚠️ Not logged in');
+    return;
   }
-}
+  if (!confirm('Replace local data with the latest cloud data?')) return;
 
-async function handleLogout() {
-  if (userProfile.isGoogleUser && driveToken && Date.now() < driveTokenExpiry) {
-    clearTimeout(syncTimer);
-    syncPending = false;
-    await mergeWithDrive();
-  }
-  userProfile.isLoggedIn = false;
-  userProfile.driveConnected = false;
-  driveToken = null;
-  driveTokenExpiry = 0;
-  saveToStorage(true);
-  setSyncState('idle');
-  showScreen('authScreen');
-  toast('Signed out');
-}
-
-// Resume session after page reload: try silent token refresh, otherwise ask for reconnect
-async function resumeSession() {
-  if (!userProfile.isLoggedIn || !userProfile.isGoogleUser) return;
-  setSyncState('reconnect');
-  const ok = await getValidToken(false);
-  if (ok) await mergeWithDrive();
-  else setSyncState('reconnect');
-}
-window.addEventListener('online', () => { if (userProfile.isLoggedIn && userProfile.isGoogleUser) scheduleSync(); });
-window.addEventListener('offline', () => { if (userProfile.isLoggedIn) setSyncState('offline'); });
-window.addEventListener('load', () => setTimeout(resumeSession, 800));
-document.addEventListener('visibilitychange', () => { if (!document.hidden && userProfile.isLoggedIn && userProfile.isGoogleUser) scheduleSync(); });
-
-// GOOGLE DRIVE SYNC LOGIC
-async function driveFindFile() {
-  const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
-  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers: { Authorization: 'Bearer ' + driveToken } });
-  if (r.status === 401) { driveToken = null; const e = new Error('auth'); e.auth = true; throw e; }
-  if (!r.ok) throw new Error(`Drive lookup failed (${r.status})`);
-  return (await r.json()).files?.[0]?.id || null;
-}
-
-async function ensureDriveToken() {
-  if (!(await getValidToken(true))) throw new Error('Google connection needed');
-  userProfile.driveConnected = true;
-  syncUserProfileChrome();
-}
-
-async function syncWithGoogleDrive() {
-  const ok = await reconnectAndSync(false);
-  toast(ok ? '✅ Synced with Google Drive' : '⚠️ Drive sync failed');
-}
-
-async function restoreFromGoogleDrive() {
   try {
-    await ensureDriveToken();
-    const id = await driveFindFile();
-    if (!id) return toast('⚠️ No backup found on Drive');
-    if (!confirm('Replace local data with the Drive copy?')) return;
-    const r = await fetch(remoteFileUrl(id), { headers: { Authorization: 'Bearer ' + driveToken } });
-    if (!r.ok) throw new Error(`Download failed (${r.status})`);
-    const raw = await r.json();
-    const d = sanitizeBackup(raw);
-    allJournals = d.journals;
-    allEntries = d.entries;
-    allTradingPlans = d.plans || allTradingPlans;
-    dataUpdatedAt = Number(raw.updatedAt) || Date.now();
+    setSyncState('syncing');
+    await AUTH.ensureFresh();
+    await DB.fetchAll();
     saveToStorage(true);
-    toast('✅ Restored from Google Drive');
+    if (currentScreenId === 'mainScreen') switchTab(currentTab);
+    setSyncState('synced');
+    lastSyncedAt = Date.now();
+    toast('✅ Restored from cloud');
   } catch (e) {
+    setSyncState('error');
     toast('⚠️ Restore failed: ' + e.message);
   }
-  switchTab(currentTab);
-}
-
-async function syncWithGoogleDrive() {
-  try {
-    await ensureDriveToken();
-    toast('🔄 Syncing trades with Google Drive...');
-    const id = await driveFindFile();
-    const boundary = 'tj_' + Date.now();
-    const body =
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })}\r\n` +
-      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({ journals: allJournals, entries: allEntries, plans: allTradingPlans })}\r\n` +
-      `--${boundary}--`;
-    const url = id
-      ? `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=multipart`
-      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    const r = await fetch(url, {
-      method: id ? 'PATCH' : 'POST',
-      headers: { Authorization: 'Bearer ' + driveToken, 'Content-Type': `multipart/related; boundary=${boundary}` },
-      body
-    });
-    if (r.status === 401) { driveToken = null; throw new Error('Session expired, try again'); }
-    if (!r.ok) throw new Error(`Upload failed (${r.status})`);
-    toast('✅ Trade journal synced to Google Drive!');
-  } catch (e) {
-    toast('⚠️ Drive sync failed: ' + e.message);
-  }
-  if (currentTab === 'settings') renderSettings(g('tabContent'));
-}
-
-async function restoreFromGoogleDrive() {
-  try {
-    await ensureDriveToken();
-    const id = await driveFindFile();
-    if (!id) return toast('⚠️ No backup found on Drive');
-    if (!confirm('Replace local data with the Drive backup?')) return;
-    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`, { headers: { Authorization: 'Bearer ' + driveToken } });
-    if (!r.ok) throw new Error(`Download failed (${r.status})`);
-    const d = sanitizeBackup(await r.json());
-    allJournals = d.journals;
-    allEntries = d.entries;
-    allTradingPlans = d.plans || allTradingPlans;
-    saveToStorage();
-    toast('✅ Restored from Google Drive');
-  } catch (e) {
-    toast('⚠️ Restore failed: ' + e.message);
-  }
-  switchTab(currentTab);
 }
 
 // NAVIGATION
@@ -1760,6 +1605,8 @@ function allCerts() {
   return allJournals.flatMap(j => (j.certs || []).map(c => ({ ...c, jid: j.id, jname: j.name })));
 }
 
+function jLabel(j) { return (j.name || 'Journal') + (j.archived ? ' (Archived)' : ''); }
+
 function renderCertificates(el) {
   if (certFilter.jid && !allJournals.some(j => j.id === certFilter.jid)) certFilter.jid = '';
   const all = allCerts();
@@ -1776,7 +1623,7 @@ function renderCertificates(el) {
     const isWd = c.type === 'withdraw';
     const amt = parseFloat(c.amount) || 0;
     return `<div class="card" style="margin:0;padding:0;overflow:hidden;cursor:pointer;" onclick="viewCert('${esc(c.jid)}','${esc(c.id)}')">
-      <div style="height:170px;background:var(--bg);"><img src="${esc(safeUrl(c.img))}" alt="" style="width:100%;height:100%;object-fit:cover;"/></div>
+      <div style="aspect-ratio:4/3;background:var(--surface3);display:flex;align-items:center;justify-content:center;padding:6px;"><img src="${esc(safeUrl(c.img))}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;"/></div>
       <div style="padding:14px 16px;">
         <span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;${isWd ? 'background:#fef3c7;color:#b45309;' : 'background:#dcfce7;color:#15803d;'}">${isWd ? '💸 Withdrawal' : '🏆 Account Cleared'}</span>
         <div style="font-weight:800;margin:8px 0 2px;">${esc(c.title || (isWd ? 'Withdrawal' : 'Account Cleared'))}</div>
@@ -1796,7 +1643,7 @@ function renderCertificates(el) {
       ${chip('all', 'All (' + all.length + ')')}${chip('clear', '🏆 Account Cleared (' + nClear + ')')}${chip('withdraw', '💸 Withdrawal (' + nWd + ')')}
       <select class="fs" style="width:auto;flex:none;" onchange="setCertFilter('jid',this.value)">
         <option value="">All journals</option>
-        ${allJournals.map(j => `<option value="${esc(j.id)}" ${f.jid === j.id ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
+        ${allJournals.map(j => `<option value="${esc(j.id)}" ${f.jid === j.id ? 'selected' : ''}>${esc(jLabel(j))}</option>`).join('')}
       </select>
       <select class="fs" style="width:auto;flex:none;" onchange="setCertFilter('sort',this.value)">
         <option value="new" ${f.sort === 'new' ? 'selected' : ''}>Newest first</option>
@@ -1821,7 +1668,7 @@ function openCertUpload() {
   if (!allJournals.length) return toast('⚠️ Create a journal first');
   certImgData = '';
   g('certType').value = 'clear';
-  g('certJournal').innerHTML = allJournals.map(j => `<option value="${esc(j.id)}">${esc(j.name)}${j.archived ? ' 📦' : ''}</option>`).join('');
+  g('certJournal').innerHTML = allJournals.map(j => `<option value="${esc(j.id)}">${esc(jLabel(j))}</option>`).join('');
   if (certFilter.jid) g('certJournal').value = certFilter.jid;
   g('certTitle').value = ''; g('certAmount').value = ''; g('certNote').value = ''; g('certFile').value = '';
   g('certDate').value = localDate();
@@ -1864,7 +1711,7 @@ function viewCert(jid, cid) {
   const amt = parseFloat(c.amount) || 0;
   g('certViewTitle').textContent = c.title || (isWd ? 'Withdrawal Certificate' : 'Account Cleared Certificate');
   g('certViewBody').innerHTML = `
-    <img src="${esc(safeUrl(c.img))}" alt="" style="width:100%;max-height:60vh;object-fit:contain;border-radius:12px;border:1px solid var(--border);background:var(--bg);"/>
+    <img src="${esc(safeUrl(c.img))}" alt="" style="width:100%;max-height:75vh;object-fit:contain;border-radius:12px;border:1px solid var(--border);background:var(--bg);"/>
     <div style="margin-top:14px;font-size:14px;font-weight:600;line-height:1.8;">
       <div>${isWd ? '💸 Withdrawal' : '🏆 Account Cleared'} · ${esc(j.name)}</div>
       <div style="color:var(--muted);">📅 ${esc(c.date || '')}${amt ? ' · $' + amt.toFixed(2) : ''}</div>
@@ -1999,10 +1846,10 @@ function renderHome(el) {
       </div>
       <div class="hm-actions" style="display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;">
         <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;width:42px;height:42px;padding:0;">${isDark ? '☀️' : '🌙'}</button>
-        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive" style="height:42px;padding:0 16px;white-space:nowrap;">☁️ Sync</button>
+        <button class="btn bs btn-sm" onclick="syncNow()" title="Sync with cloud" style="height:42px;padding:0 16px;white-space:nowrap;">☁️ Sync</button>
         <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:190px;max-width:260px;height:42px;font-weight:700;padding:0 14px;margin:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
           <option value="" ${!homeJournalId ? 'selected' : ''}>📊 All Journals</option>
-          ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === homeJournalId ? 'selected' : ''}>${j.archived ? '📦 ' : ''}${esc(j.name)}</option>`).join('')}
+          ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === homeJournalId ? 'selected' : ''}>${esc(jLabel(j))}</option>`).join('')}
         </select>
         <button class="btn bp btn-sm" onclick="openAddEntry()" style="height:42px;padding:0 18px;white-space:nowrap;">＋ New Trade</button>
       </div>
@@ -2056,141 +1903,6 @@ function renderHome(el) {
   </div>`;
 }
 
-function _renderHomeLegacy(el) {
-  let entries = allEntries;
-  let activeJournalObj = null;
-  if (homeJournalId) {
-    entries = allEntries.filter(e => e.journal_id === homeJournalId);
-    activeJournalObj = allJournals.find(j => j.id === homeJournalId);
-  }
-
-  const total = entries.length;
-  const wins = entries.filter(e => e.result?.toLowerCase() === 'win').length;
-  const losses = entries.filter(e => e.result?.toLowerCase() === 'loss').length;
-  const be = entries.filter(e => e.result?.toLowerCase() === 'breakeven').length;
-  const totalPnl = entries.reduce((a, e) => a + (parseFloat(e.pnl) || 0), 0);
-  const winRate = total > 0 ? Math.round(wins / total * 100) : 0;
-  const recent = entries.slice(0, 5);
-
-  const isDark = document.body.getAttribute('data-theme') === 'dark';
-
-  el.innerHTML = `
-  <div style="padding:16px;" class="dashboard-grid">
-    <div class="hm-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
-      <div>
-        <div style="font-size:24px;font-weight:800;letter-spacing:-.4px;">Hey ${esc(userProfile.name.split(' ')[0])} 👋</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" style="font-size:16px;">
-          ${isDark ? '☀️' : '🌙'}
-        </button>
-        <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()" title="Sync with Google Drive" style="gap:6px;">
-          <span>☁️</span> Sync Drive
-        </button>
-        <select class="fs" id="homeJournalSelector" onchange="onHomeJournalChange(this.value)" style="min-width:210px;font-weight:700;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;">
-          <option value="" ${!homeJournalId ? 'selected' : ''}>📊 Overall (All Journals)</option>
-          ${allJournals.map(j => `<option value="${j.id}" ${j.id === homeJournalId ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
-        </select>
-        <button class="btn bp btn-sm" onclick="openAddEntry()" style="gap:6px;padding:10px 18px;">＋ New Trade</button>
-      </div>
-    </div>
-
-    <div class="hm-stats stats-grid">
-      <div class="stat-card">
-        <div class="sv" style="color:var(--accent);">${total}</div>
-        <div class="sl">Total Trades</div>
-      </div>
-      <div class="stat-card">
-        <div class="sv" style="color:${winRate>=50?'var(--win)':'var(--loss)'}">${winRate}%</div>
-        <div class="sl">Win Rate</div>
-      </div>
-      <div class="stat-card">
-        <div class="sv" style="color:#f59e0b;">$${allJournals.reduce((a, j) => a + (j.withdrawals || []).reduce((b, w) => b + (parseFloat(w.amount) || 0), 0), 0).toFixed(2)}</div>
-        <div class="sl">💸 Withdrawn</div>
-      </div>
-      <div class="stat-card">
-        <div class="sv" style="color:${totalPnl>=0?'var(--win)':'var(--loss)'};">${totalPnl>=0?'+$':'-$'}${Math.abs(totalPnl).toFixed(2)}</div>
-        <div class="sl">Total P&L</div>
-      </div>
-    </div>
-
-    <div class="hm-chart">
-      ${total > 0 ? `
-      <div class="card" style="margin-bottom:16px;padding:20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.5px;">TRADE DISTRIBUTION ${activeJournalObj ? `(${esc(activeJournalObj.name)})` : ''}</div>
-          <span style="font-size:11px;color:var(--muted);font-weight:600;">${total} Trades Logged</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:24px;">
-          ${renderDonut(wins, losses, be, total)}
-          <div style="flex:1;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
-              <span style="color:var(--win);font-weight:700;">✅ Wins</span>
-              <span style="font-weight:700;">${wins}</span>
-            </div>
-            <div class="pb" style="margin-bottom:12px;"><div class="pf pw" style="width:${wins/total*100}%;"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
-              <span style="color:var(--loss);font-weight:700;">❌ Losses</span>
-              <span style="font-weight:700;">${losses}</span>
-            </div>
-            <div class="pb" style="margin-bottom:12px;"><div class="pf pl" style="width:${losses/total*100}%;"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
-              <span style="color:var(--be);font-weight:700;">⚡ Breakeven</span>
-              <span style="font-weight:700;">${be}</span>
-            </div>
-            <div class="pb"><div class="pf" style="background:var(--be);width:${be/total*100}%;"></div></div>
-          </div>
-        </div>
-      </div>` : `
-      <div class="card" style="margin-bottom:16px;padding:24px;text-align:center;color:var(--muted);">
-        <div style="font-size:32px;margin-bottom:8px;">📊</div>
-        <div style="font-weight:700;">No trades logged in this account yet</div>
-        <div style="font-size:12px;margin-top:4px;">Tap + New Trade to record your first trade for this account.</div>
-      </div>`}
-    </div>
-
-    <!-- QUICK ACTIONS -->
-    <div class="hm-actions">
-      <div class="sh"><span class="st">Quick Actions</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
-        <button class="btn bs" onclick="switchTab('journals')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
-          <span style="font-size:20px;">📚</span> Journals
-        </button>
-        <button class="btn bs" onclick="openFilterScreen()" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
-          <span style="font-size:20px;">🔍</span> Filter
-        </button>
-        <button class="btn bs" onclick="openTradingPlans()" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
-          <span style="font-size:20px;">📘</span> Trading Plans
-        </button>
-        <button class="btn bs" onclick="switchTab('analysis')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;">
-          <span style="font-size:20px;">📊</span> Analysis
-        </button>
-        <button class="btn bs" onclick="switchTab('calendar')" style="justify-content:flex-start;gap:12px;padding:16px;font-weight:700;grid-column: span 2;">
-          <span style="font-size:20px;">📅</span> Calendar
-        </button>
-      </div>
-    </div>
-
-    <div class="hm-recent">
-      <div class="sh">
-        <span class="st">Recent Entries ${activeJournalObj ? `(${esc(activeJournalObj.name)})` : ''}</span>
-        <button onclick="switchTab('journals')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">View All</button>
-      </div>
-      ${recent.length === 0
-        ? `<div class="es"><div class="ei">📝</div><h3>No entries yet</h3><p>Tap + New Trade above to start!</p></div>`
-        : recent.map(e => renderEC(e, true)).join('')}
-    </div>
-
-    <div class="hm-journals">
-      <div class="sh" style="margin-top:10px;">
-        <span class="st">My Journals (${allJournals.length})</span>
-        <button onclick="openNewJournal()" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;font-weight:700;">+ New</button>
-      </div>
-      ${allJournals.filter(j => !j.archived).slice(0, 3).map(j => renderJC(j)).join('')}
-    </div>
-  </div>`;
-}
 
 function renderDonut(wins, losses, be, total) {
   if (total === 0) return '';
@@ -2234,7 +1946,7 @@ function renderFilterScreen() {
           <label class="fl">Journal</label>
           <select class="fs" id="fl_journal" onchange="applyFilters()">
             <option value="">All Journals</option>
-            ${allJournals.map(j => `<option value="${j.id}">${esc(j.name)}</option>`).join('')}
+            ${allJournals.map(j => `<option value="${j.id}">${esc(jLabel(j))}</option>`).join('')}
           </select>
         </div>
         <div class="fg">
@@ -2517,7 +2229,7 @@ function renderAnalysis(el) {
       <label class="fl">SELECT JOURNAL</label>
       <select class="fs" id="analysisJournalSelector" onchange="onAnalysisJournalChange(this.value)" style="font-weight:700;padding:14px;">
         <option value="" ${!selJid ? 'selected' : ''}>📊 Overall (All Journals)</option>
-        ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === selJid ? 'selected' : ''}>${esc(j.name)}</option>`).join('')}
+        ${allJournals.map(j => `<option value="${esc(j.id)}" ${j.id === selJid ? 'selected' : ''}>${esc(jLabel(j))}</option>`).join('')}
       </select>
       ${jr ? `<button class="btn bs btn-sm" style="margin-top:10px;" onclick="openEditJournal('${esc(jr.id)}')">✏️ Edit journal &amp; challenge rules</button>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px;overflow-x:auto;">${rangeChips}</div>
@@ -2577,108 +2289,6 @@ function renderAnalysis(el) {
   </div>`;
 }
 
-function _renderAnalysisLegacy(el) {
-  const selJid = window._analysisJournalId || '';
-  let entries = allEntries;
-  if (selJid) entries = entries.filter(e => e.journal_id === selJid);
-
-  const total = entries.length;
-  const wins = entries.filter(e => e.result?.toLowerCase() === 'win').length;
-  const losses = entries.filter(e => e.result?.toLowerCase() === 'loss').length;
-  const be = entries.filter(e => e.result?.toLowerCase() === 'breakeven').length;
-  const totalPnl = entries.reduce((a, e) => a + (parseFloat(e.pnl) || 0), 0);
-  const winRate = total > 0 ? Math.round(wins / total * 100) : 0;
-
-  const pairMap = {};
-  entries.forEach(e => {
-    if (!pairMap[e.pair]) pairMap[e.pair] = { pair: e.pair, wins: 0, losses: 0, total: 0, pnl: 0 };
-    pairMap[e.pair].total++;
-    pairMap[e.pair].pnl += parseFloat(e.pnl) || 0;
-    if (e.result?.toLowerCase() === 'win') pairMap[e.pair].wins++;
-    if (e.result?.toLowerCase() === 'loss') pairMap[e.pair].losses++;
-  });
-  const pairStats = Object.values(pairMap).map(p => ({
-    ...p,
-    winRate: p.total > 0 ? (p.wins / p.total * 100).toFixed(1) : '0'
-  })).sort((a,b) => b.total - a.total);
-
-  el.innerHTML = `
-  <div style="padding:16px;">
-    <div class="fg" style="margin-bottom:24px;">
-      <label class="fl">SELECT JOURNAL</label>
-      <select class="fs" id="analysisJournalSelector" onchange="onAnalysisJournalChange(this.value)" style="font-weight:700;padding:14px;">
-        <option value="" ${!selJid?'selected':''}>📊 Overall (All Journals)</option>
-        ${allJournals.map(j => `<option value="${j.id}" ${j.id===selJid?'selected':''}>${esc(j.name)}</option>`).join('')}
-      </select>
-    </div>
-
-    <div class="card" style="margin-bottom:20px;padding:24px;">
-      <div class="fl" style="margin-bottom:16px;">TRADE DISTRIBUTION</div>
-      <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
-        <div style="display:flex;flex-direction:column;align-items:center;">
-          <div class="donut-wrap" style="width:130px;height:130px;">
-            <svg width="130" height="130" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--surface2)" stroke-width="14"/>
-              <circle cx="60" cy="60" r="44" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="${(total>0?wins/total:0)*276} 276" stroke-dashoffset="0"/>
-              <circle cx="60" cy="60" r="44" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="${(total>0?losses/total:0)*276} 276" stroke-dashoffset="${-((total>0?wins/total:0)*276)}"/>
-              <circle cx="60" cy="60" r="44" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="${(total>0?Math.max(total-wins-losses,0)/total:0)*276} 276" stroke-dashoffset="${-((total>0?(wins+losses)/total:0)*276)}"/>
-            </svg>
-            <div class="donut-center">
-              <div style="font-size:22px;font-weight:800;font-family:var(--font-mono);">${winRate}%</div>
-              <div style="font-size:10px;color:var(--muted);font-weight:700;">Win Rate</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="flex:1;min-width:240px;">
-          <div style="margin-bottom:18px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
-              <span style="color:var(--win);font-weight:700;">✅ Wins</span>
-              <span style="font-weight:800;">${wins}</span>
-            </div>
-            <div class="pb" style="height:10px;"><div class="pf pw" style="width:${total>0?wins/total*100:0}%;"></div></div>
-          </div>
-          <div style="margin-bottom:18px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
-              <span style="color:var(--loss);font-weight:700;">❌ Losses</span>
-              <span style="font-weight:800;">${losses}</span>
-            </div>
-            <div class="pb" style="height:10px;"><div class="pf pl" style="width:${total>0?losses/total*100:0}%;"></div></div>
-          </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
-              <span style="color:var(--be);font-weight:700;">⚡ Breakeven</span>
-              <span style="font-weight:800;">${be}</span>
-            </div>
-            <div class="pb" style="height:10px;"><div class="pf" style="background:var(--be);width:${total>0?be/total*100:0}%;"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:20px;padding:24px;">
-      <div class="fl" style="margin-bottom:18px;">📈 PAIR PERFORMANCE</div>
-      ${pairStats.length === 0 ? `<div style="color:var(--muted);text-align:center;padding:20px;">No trades logged yet</div>` : `
-        <div class="chart-bar-wrap" style="height:160px;margin-bottom:20px;">
-          ${pairStats.map(p => `
-            <div class="chart-bar" style="background:${parseFloat(p.winRate)>=50?'rgba(34,197,94,.18)':'rgba(239,68,68,.18)'};height:${p.winRate}%;border:1px solid ${parseFloat(p.winRate)>=50?'rgba(34,197,94,.5)':'rgba(239,68,68,.5)'};">
-              <div class="bar-val" style="color:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};">${p.winRate}%</div>
-              <div class="bar-label">${esc(p.pair)}</div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="div"></div>
-        ${pairStats.map(p => `
-          <div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="font-weight:800;min-width:80px;font-size:14px;color:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};">${esc(p.pair)}</div>
-            <div style="flex:1;"><div class="pb" style="height:10px;"><div class="pf" style="background:${parseFloat(p.winRate)>=50?'var(--win)':'var(--loss)'};width:${p.winRate}%;"></div></div></div>
-            <div style="font-size:13px;color:var(--muted);min-width:110px;text-align:right;font-weight:600;">${p.winRate}% · ${p.wins}W ${p.losses}L</div>
-          </div>
-        `).join('')}
-      `}
-    </div>
-  </div>`;
-}
 
 function onAnalysisRange(d) {
   window._analysisRange = d;
@@ -2843,7 +2453,7 @@ function renderSettings(el) {
       <div class="fl" style="margin-bottom:12px;">PROFILE</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:48px;height:48px;border-radius:12px;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>
           <div>
             <div style="font-size:16px;font-weight:800;" id="profName">${esc(userProfile.name)}</div>
             <div style="font-size:13px;color:var(--muted);" id="profHandle">${esc(userProfile.handle)} · ${esc(userProfile.email)}</div>
@@ -2866,19 +2476,19 @@ function renderSettings(el) {
     </div>
 
     <div class="card">
-      <div class="fl" style="margin-bottom:12px;">GOOGLE DRIVE & BACKUP</div>
+      <div class="fl" style="margin-bottom:12px;">CLOUD SYNC & BACKUP</div>
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
           <div style="font-weight:700;color:${syncState==='synced'?'var(--win)':'var(--muted)'};display:flex;align-items:center;gap:6px;">
-            ${syncState==='synced' ? '✅ Auto-sync on' : syncState==='syncing' ? '🔄 Syncing…' : syncState==='offline' ? '📴 Offline – will sync when online' : '🔑 Reconnect Google to sync'}
+            ${syncState==='synced' ? '✅ Auto-sync on' : syncState==='syncing' ? '🔄 Syncing…' : syncState==='offline' ? '📴 Offline – will sync when online' : syncState==='error' ? '⚠️ Sync error' : '🔌 Syncing...'}
           </div>
           <div style="font-size:13px;color:var(--muted);margin-top:2px;">
-            ${lastSyncedAt ? 'Last synced ' + new Date(lastSyncedAt).toLocaleTimeString() + '. ' : ''}Changes save to your Google Drive automatically; the newest copy loads when you sign in.
+            ${lastSyncedAt ? 'Last synced ' + new Date(lastSyncedAt).toLocaleTimeString() + '. ' : ''}All trades are automatically synced to your secure cloud database.
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn bs btn-sm" onclick="syncWithGoogleDrive()">🔁 Sync Now</button>
-          <button class="btn bs btn-sm" onclick="restoreFromGoogleDrive()">⬇️ Force Restore</button>
+          <button class="btn bs btn-sm" onclick="syncNow()">🔁 Sync Now</button>
+          <button class="btn bs btn-sm" onclick="restoreFromCloud()">⬇️ Restore from Cloud</button>
           <button class="btn bs btn-sm" onclick="exportDataBackup()">💾 Download JSON</button>
           <button class="btn bs btn-sm" onclick="g('importFile').click()">📂 Import JSON</button>
           <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importDataBackup(this)">
@@ -2889,29 +2499,46 @@ function renderSettings(el) {
     <div class="card">
       <div class="fl" style="margin-bottom:12px;">ACCOUNT</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
-        Signed in with Google (${esc(userProfile.email)}). Your data lives in your own Google Drive and is cached in this browser.
+        Signed in with email (${esc(userProfile.email)}). Your data is securely stored in Supabase and synced across all your devices.
       </div>
-      <button class="btn bd btn-sm" onclick="handleLogout()">Log Out of Portal</button>
+      <button class="btn bd btn-sm" onclick="handleLogout()">Log Out</button>
     </div>
 
     <div class="card" style="text-align:center;padding:24px;background:none;border:none;box-shadow:none;">
       <div style="font-size:15px;font-weight:800;">Trade Journal</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px;">Professional Trading Suite Journal</div>
       <div style="font-size:12px;color:var(--muted);margin-top:14px;">
-        Created by <b style="color:var(--accent);">Professional Trading Suite</b>
+        Powered by <b style="color:var(--accent);">Supabase</b>
       </div>
     </div>
   </div>`;
 }
 
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.body.setAttribute('data-theme', t);
+  const m = document.getElementById('themeColorMeta');
+  if (m) m.setAttribute('content', t === 'dark' ? '#080d17' : '#f1f5f9');
+}
+
 function toggleTheme() {
-  const cur = document.body.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.body.setAttribute('data-theme', next);
+  const next = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('tj_theme', next); } catch (e) {}
   toast(`Switched to ${next} mode`);
   if (currentTab === 'settings') renderSettings(g('tabContent'));
   else if (currentTab === 'home') renderHome(g('tabContent'));
+  else if (currentTab === 'analysis' && typeof renderAnalysis === 'function') renderAnalysis(g('tabContent'));
 }
+
+(function initTheme() {
+  let t = null;
+  try { t = localStorage.getItem('tj_theme'); } catch (e) {}
+  if (t !== 'dark' && t !== 'light') {
+    t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  applyTheme(t);
+})();
 
 function editProfile() {
   const newName = prompt('Enter your name:', userProfile.name);
@@ -2965,7 +2592,7 @@ function openAddEntry() {
   g('entryModalTitle').textContent = 'New Trade Entry';
 
   const sel = g('entryJournalId');
-  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===(homeJournalId || currentJournal?.id)?'selected':''}>${esc(j.name)}</option>`).join('');
+  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===(homeJournalId || currentJournal?.id)?'selected':''}>${esc(jLabel(j))}</option>`).join('');
 
   g('entryPair').value = '';
   g('entryDirection').value = 'Buy';
@@ -3000,7 +2627,7 @@ function openEditEntry() {
   g('entryModalTitle').textContent = 'Edit Trade Entry';
 
   const sel = g('entryJournalId');
-  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===e.journal_id?'selected':''}>${esc(j.name)}</option>`).join('');
+  sel.innerHTML = allJournals.map(j => `<option value="${j.id}" ${j.id===e.journal_id?'selected':''}>${esc(jLabel(j))}</option>`).join('');
 
   g('entryPair').value = e.pair || '';
   g('entryDirection').value = e.direction || 'Buy';
@@ -3035,7 +2662,8 @@ function compressImage(file, maxDim = 1280, quality = 0.7) {
       c.height = Math.round(img.height * s);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL('image/jpeg', quality));
+      const webp = c.toDataURL('image/webp', quality);
+      resolve(webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/jpeg', quality));
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Not a valid image')); };
     img.src = url;
@@ -3072,7 +2700,7 @@ function syncImageSlotPreviews() {
     if (slotEl) {
       const urlInput = slotEl.querySelector('.img-url-input');
       const val = currentSlotImages[i] || '';
-      if (urlInput) urlInput.value = val.startsWith('data:') ? '' : val;
+      if (urlInput) urlInput.value = /^(data:|sb:)/.test(val) ? '' : val;
     }
     updateSlotPreview(i);
   }
@@ -3083,8 +2711,11 @@ function updateSlotPreview(slotIdx) {
   if (!img) return;
   const src = currentSlotImages[slotIdx];
   if (src) {
-    img.src = src;
     img.style.display = 'block';
+    if (src.startsWith('sb:')) {
+      img.src = IMG_PLACEHOLDER;
+      STORE.resolve(src).then(u => { if (currentSlotImages[slotIdx] === src && u) img.src = u; });
+    } else img.src = src;
   } else {
     img.src = '';
     img.style.display = 'none';
@@ -3157,7 +2788,9 @@ function openChart(idx) {
   const e = window._curEntry || {};
   const u = safeUrl((e.chart_urls || (e.chart_url ? [e.chart_url] : []))[idx]);
   if (!u) return;
-  if (u.startsWith('data:')) {
+  if (u.startsWith('sb:')) {
+    STORE.resolve(u).then(url => url && window.open(url, '_blank', 'noopener'));
+  } else if (u.startsWith('data:')) {
     fetch(u).then(r => r.blob()).then(b => window.open(URL.createObjectURL(b), '_blank'));
   } else {
     window.open(u, '_blank', 'noopener');
@@ -3201,12 +2834,13 @@ function renderEntryDetail(entry) {
         ${charts.map((url, idx) => safeUrl(url) ? `
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">Chart ${idx + 1}</div>
-            <img src="${esc(safeUrl(url))}" alt="Chart ${idx+1}" style="width:100%;border-radius:12px;border:1px solid var(--border);cursor:pointer;display:block;" onclick="openChart(${idx})"/>
+            <img src="${esc(imgSrc(safeUrl(url)))}" data-sb="${safeUrl(url).startsWith('sb:') ? esc(safeUrl(url)) : ''}" alt="Chart ${idx+1}" style="width:100%;border-radius:12px;border:1px solid var(--border);cursor:pointer;display:block;" onclick="openChart(${idx})"/>
           </div>
         ` : '').join('')}
       </div>
     </div>` : ''}
   `;
+  hydrateStorageImages(g('entryDetailBody'));
 }
 
 function deleteCurrentEntry() {
@@ -3627,19 +3261,188 @@ window.addEventListener('keydown', (e) => {
 
 // MODAL CONTROLS
 function openModal(id) { g(id).classList.add('open'); }
-function closeModal(id) { g(id).classList.remove('open'); }
+function closeModal(id) { if (!id) return closeDynModal(); g(id).classList.remove('open'); }
 
 // INITIALIZATION
-window.addEventListener('DOMContentLoaded', () => {
-  initData();
-  if (userProfile.isLoggedIn) {
+window.addEventListener('DOMContentLoaded', async () => {
+  // Try to restore Supabase session
+  try { await AUTH.init(); } catch (e) { console.error('AUTH.init failed', e); }
+  _recoveryToken = AUTH.consumeRecoveryToken();
+  if (_recoveryToken) {
+    showScreen('authScreen');
+    switchAuthView('reset');
+    return;
+  }
+  await AUTH.restoreSession();
+  
+  if (AUTH.isAuthenticated()) {
+    g('authScreen').classList.add('hidden');
+    g('mainScreen').classList.remove('hidden');
+    
+    // Load data from Supabase
+    try {
+      switchTab('home');
+      await DB.syncAll();
+      
+      // Start sync and auto-backup
+      DB.startPolling();
+      scheduleAutoBackup();
+    } catch (e) {
+      toast('⚠️ Failed to load data: ' + e.message);
+    }
+  } else {
+    showScreen('authScreen');
+    switchAuthView('signin');
+  }
+});
+
+// Load this user's data after sign-in (never inherits another user's local data)
+async function loadUserData() {
+  allJournals = [...DEFAULT_JOURNALS];
+  allEntries = [];
+  allTradingPlans = [...DEFAULT_PLANS];
+  dataUpdatedAt = 0;
+  const cloud = await DB.fetchCloud();
+  if (cloud.hasData) {
+    allJournals = cloud.journals;
+    allEntries = cloud.entries;
+    allTradingPlans = cloud.plans;
+    dataUpdatedAt = cloud.updatedAt;
+    saveToStorage(true);
+    DB.rebase(cloud.updatedAt);
+  } else {
+    saveToStorage(true);
+    DB.clearBase(AUTH.user.id);
+    await DB.syncAll();
+  }
+  DB.startPolling();
+  scheduleAutoBackup();
+}
+
+// Auth view switching
+function switchAuthView(view) {
+  g('authSignInView').classList.toggle('active', view === 'signin');
+  g('authSignUpView').classList.toggle('active', view === 'signup');
+  g('authLoadingView').classList.toggle('active', view === 'loading');
+  g('authForgotView').classList.toggle('active', view === 'forgot');
+  g('authResetView').classList.toggle('active', view === 'reset');
+}
+
+let _recoveryToken = null;
+
+async function handleForgotPassword() {
+  const email = g('forgotEmail').value.trim();
+  if (!email) return toast('⚠️ Enter your email');
+  try {
+    await AUTH.requestPasswordReset(email);
+    toast('✅ If that email exists, a reset link was sent');
+    switchAuthView('signin');
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+
+async function handleResetPassword() {
+  const pw = g('resetPassword').value;
+  if (pw !== g('resetConfirm').value) return toast('⚠️ Passwords do not match');
+  try {
+    await AUTH.updatePassword(_recoveryToken, pw);
+    _recoveryToken = null;
+    toast('✅ Password updated. Please sign in.');
+    switchAuthView('signin');
+  } catch (e) { toast('⚠️ ' + e.message); }
+}
+
+// Handle auth UI calls to Supabase module
+AUTH.handleSignIn = async function() {
+  switchAuthView('loading');
+  const email = g('signInEmail').value;
+  const password = g('signInPassword').value;
+  
+  try {
+    await this.signIn(email, password);
+    await loadUserData();
     g('authScreen').classList.add('hidden');
     g('mainScreen').classList.remove('hidden');
     switchTab('home');
-  } else {
-    showScreen('authScreen');
+    scheduleAutoBackup();
+    toast(`👋 Welcome, ${this.user.email}`);
+  } catch (e) {
+    toast('⚠️ Sign in failed: ' + e.message);
+    switchAuthView('signin');
   }
-});
+};
+
+AUTH.handleSignUp = async function() {
+  switchAuthView('loading');
+  const email = g('signUpEmail').value;
+  const password = g('signUpPassword').value;
+  const confirm = g('signUpConfirm').value;
+  
+  if (password !== confirm) {
+    toast('⚠️ Passwords do not match');
+    switchAuthView('signup');
+    return;
+  }
+  
+  if (!email || password.length < 8) {
+    toast('⚠️ Enter an email and a password of at least 8 characters');
+    switchAuthView('signup');
+    return;
+  }
+
+  try {
+    if (!this.supabaseUrl) await this.init();
+    const result = await this.signUp(email, password);
+    if (result.needsConfirmation) {
+      alert('Account created! Check your email and click the confirmation link, then sign in.');
+      switchAuthView('signin');
+      return;
+    }
+    toast('✅ Account created! Signing in...');
+    await this.signIn(email, password);
+    await loadUserData();
+    g('authScreen').classList.add('hidden');
+    g('mainScreen').classList.remove('hidden');
+    switchTab('home');
+    scheduleAutoBackup();
+  } catch (e) {
+    alert('Sign up failed: ' + e.message);
+    switchAuthView('signup');
+  }
+};
+
+function handleLogout() {
+  askBackupThen('👋 Sign out', 'Download a JSON backup before signing out?', doLogout, 'Sign out without backup');
+}
+
+async function doLogout() {
+  try {
+    // Sync final data to cloud
+    if (navigator.onLine) {
+      await DB.syncAll();
+    }
+    
+    // Clear session
+    DB.stopPolling();
+    if (AUTH.user) DB.clearBase(AUTH.user.id);
+    await AUTH.logout();
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(USER_KEY);
+    
+    allJournals = [...DEFAULT_JOURNALS];
+    allEntries = [];
+    allTradingPlans = [...DEFAULT_PLANS];
+    dataUpdatedAt = 0;
+    lastDataSnap = '';
+    
+    showScreen('authScreen');
+    switchAuthView('signin');
+    toast('👋 Signed out');
+  } catch (e) {
+    toast('⚠️ Logout failed: ' + e.message);
+  }
+}
 </script>
-</body>
-</html>
+
+<!-- Supabase & Cloud Storage Modules (kept after main script block end marker) -->
+
+<script>

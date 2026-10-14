@@ -1,2 +1,7 @@
 client_secret*.json
 *.secret
+.env.local
+node_modules/
+uploads/
+
+assets/
